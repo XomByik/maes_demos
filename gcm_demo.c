@@ -480,10 +480,10 @@ void runGcmTest(const GCM_Test_Vector *vector) {
         int8_t test_success = (decryption_status == NO_ERROR_RETURNED) != vector->expected_status;
         
         printf("Status desifrovania: %s\n", decryption_status == NO_ERROR_RETURNED ? 
-               "✓ Uspesne" : "✗ Neuspesne (chyba autentifikacie)");
+               " Uspesne" : " Neuspesne (chyba autentifikacie)");
         
         printf("Kontrola statusu: %s (ocakavany status: %s, skutocny: %s)\n", 
-               test_success ? "✓ OK" : "✗ CHYBA", 
+               test_success ? " OK" : " CHYBA", 
                vector->expected_status ? "ZLYHANIE" : "USPECH", 
                decryption_status == NO_ERROR_RETURNED ? "USPECH" : "ZLYHANIE");
         
