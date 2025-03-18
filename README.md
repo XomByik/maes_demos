@@ -71,10 +71,10 @@ gcc -Wall -Wextra -O2 -o gcm_demo_192 ctr_demo.c libs/micro_aes.c -DCTR=1 -DAES_
 gcc -Wall -Wextra -O2 -o gcm_demo_256 ctr_demo.c libs/micro_aes.c -DCTR=1 -DAES___=256
 
 # AES-128-GCM (1024 BIT NONCE)
-gcc -Wall -Wextra -O2 -o gcm_demo_128 ctr_demo.c libs/micro_aes.c -DCTR=1 -DAES___=128
+gcc -Wall -Wextra -O2 -o gcm_demo_128 ctr_demo.c libs/micro_aes.c -DCTR=1 -DAES___=128 -DGCM_NONCE_LEN=128
 
 # AES-192-FCM (1024 BIT NONCE)
-gcc -Wall -Wextra -O2 -o gcm_demo_192 ctr_demo.c libs/micro_aes.c -DCTR=1 -DAES___=192
+gcc -Wall -Wextra -O2 -o gcm_demo_192 ctr_demo.c libs/micro_aes.c -DCTR=1 -DAES___=192 -DGCM_NONCE_LEN=128
 
 # AES-256-GCM (1024 BIT NONCE)
 gcc -Wall -Wextra -O2 -o gcm_demo_256 ctr_demo.c libs/micro_aes.c -DCTR=1 -DAES___=256 -DGCM_NONCE_LEN=128
