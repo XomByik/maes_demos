@@ -1,0 +1,72 @@
+/** Since µAES code is optimized for 8-bit CPUs, it might be much less efficient
+ * for a 32-bit machine. We can apply a few tweaks, especially in the process of
+ * mixing columns, to boost the performance on such systems. It's safe to assume
+ * that the `unsigned` keyword is equivalent to `uint32_t` type. But endian-ness
+ * of the system must be known or pre-determined, either by including <endian.h>
+ * or evaluating an expression. For example suppose `SYSTEM_IS_BIG_ENDIAN` macro
+ * indicates whether a system is big-endian or not! Then, the following piece of
+ * code can be used to replace the lines #83 to #130 of the "micro_aes.c" source
+ * file, —starting with `#if DONT_USE_FUNCTIONS`. Next, the body of `MixColumns`
+ * and `InvMixColumns` functions must be updated to incorporate these changes */
+
+#if CHECK_ENDIANNES_AT_RUNTIME
+static const unsigned l_End = 16;
+#define RL8(x)  rotl( x, 8U + *(char*) &l_End )
+#elif SYSTEM_IS_BIG_ENDIAN               /* ! use appropriate standard macros */
+#define RL8(x)  rotl( x, 8 )
+#else
+#define RL8(x)  rotl( x, 24 )
+#endif
+
+#define R16(x)  rotl( x, 16 )
+#define RRR(x)  rotl( x, 8 ) ^ rotl( x, 16 ) ^ rotl( x, 24 )
+
+/** This method must simply compile to a bit-rotate CPU instruction (ror/rol) */
+static unsigned rotl( unsigned value, unsigned shift )
+{
+    return (value << shift) | (value >> (32 - shift));
+}
+
+/** XOR two 128-bit numbers (blocks) src and dest: optimized for 32-bit CPUs. */
+static void xorBlock( const block_t src, block_t dest )
+{
+    XOR32BITS( src[ 0], dest[ 0] );
+    XOR32BITS( src[ 4], dest[ 4] );
+    XOR32BITS( src[ 8], dest[ 8] );
+    XOR32BITS( src[12], dest[12] );
+}
+
+/** all 4 bytes of an unsigned integer are doubled [i.e. xtime-ed] in GF(2^8) */
+static void quad_xtime( unsigned* x )
+{
+    unsigned cc = (*x >> 7 & 0x1010101L) * 0x1b;
+    *x = (*x << 1 & ~0x1010101L) ^ cc;
+}
+
+--------------------------------------------------------------------------------
+static void MixColumns( state_t *state )
+{
+    unsigned rt, i, *s = (unsigned*) &state[0];
+    for (i = Nb; i--; ++s)
+    {
+        rt  = RRR( *s );
+        *s ^= RL8( *s );
+        quad_xtime( s );
+        *s ^= rt;
+    }
+}
+
+static void InvMixColumns( state_t *state )
+{
+    unsigned rt, i, *s = (unsigned*) &state[0];
+    for (i = Nb; i--; ++s)
+    {
+        rt  = RRR( *s );
+        quad_xtime( s );
+        rt ^= RL8( *s ) ^ *s;
+        quad_xtime( s );
+        rt ^= R16( *s ) ^ *s;
+        quad_xtime( s );
+        *s ^= RRR( *s ) ^ rt;
+    }
+}

@@ -1,0 +1,202 @@
+CFB1-AES256.Encrypt
+
+Key 603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4
+IV 000102030405060708090a0b0c0d0e0f
+
+Segment #1 
+Input Block 000102030405060708090a0b0c0d0e0f 
+Output Block b7bf3a5df43989dd97f0fa97ebce2f4a 
+Plaintext 0 
+Ciphertext 1 
+
+Segment #2 
+Input Block 00020406080a0c0e10121416181a1c1f 
+Output Block ee93d380e0f01117fffd78017599514a 
+Plaintext 1 
+Ciphertext 0 
+
+Segment #3 
+Input Block 0004080c1014181c2024282c3034383e 
+Output Block 857749898b3602aad91e699911de89b0 
+Plaintext 1 
+Ciphertext 0 
+
+Segment #4 
+Input Block 0008101820283038404850586068707c 
+Output Block dce81c80810e2ba343a6bb402716b7a8 
+Plaintext 0 
+Ciphertext 1 
+
+Segment #5 
+Input Block 00102030405060708090a0b0c0d0e0f9 
+Output Block e5517bfcdccea00501350a601f754823 
+Plaintext 1 
+Ciphertext 0 
+
+Segment #6 
+Input Block 0020406080a0c0e10121416181a1c1f2 
+Output Block 15799c7f4081a78cc41f29955349c5a0 
+Plaintext 0 
+Ciphertext 0 
+
+Segment #7 
+Input Block 004080c1014181c2024282c3034383e4 
+Output Block 84d246bdb391f6a7979ff5ccb8467262 
+Plaintext 1 
+Ciphertext 0 
+
+Segment #8 
+Input Block 008101820283038404850586068707c8 
+Output Block bb9e05db9855a9e7e3837a648dd4c3b0 
+Plaintext 1 
+Ciphertext 0 
+
+Segment #9 
+Input Block 0102030405060708090a0b0c0d0e0f90 
+Output Block a413c5714f70287dfcd943004bf7ac8e 
+Plaintext 1 
+Ciphertext 0 
+
+Segment #10 
+Input Block 020406080a0c0e10121416181a1c1f20 
+Output Block a7310abf87610d66edf6c892a84460d5 
+Plaintext 1 
+Ciphertext 0 
+
+Segment #11 
+Input Block 04080c1014181c2024282c3034383e40 
+Output Block 8aec6712d89bd147c83b51d787b11399 
+Plaintext 0 
+Ciphertext 1 
+
+Segment #12 
+Input Block 08101820283038404850586068707c81 
+Output Block 2ff05b620f68134f4ba92deffbfc93b2 
+Plaintext 0 
+Ciphertext 0 
+
+Segment #13 
+Input Block 102030405060708090a0b0c0d0e0f902 
+Output Block 819208afd5284316065a76bead028ad3 
+Plaintext 0 
+Ciphertext 1 
+
+Segment #14 
+Input Block 20406080a0c0e10121416181a1c1f205 
+Output Block 1914ed64b2115167ce2ca4c813da5245 
+Plaintext 0 
+Ciphertext 0 
+
+Segment #15 
+Input Block 4080c1014181c2024282c3034383e40a 
+Output Block 638abae8724a954ae9e1e2e119deb6e1 
+Plaintext 0 
+Ciphertext 0 
+
+Segment #16 
+Input Block 8101820283038404850586068707c814 
+Output Block 2b4f488a3f958c52a3f1db2da938360e 
+Plaintext 1 
+Ciphertext 1 
+
+CFB1-AES256.Decrypt
+
+Key 603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4
+IV 000102030405060708090a0b0c0d0e0f
+
+Segment #1 
+Input Block 000102030405060708090a0b0c0d0e0f 
+Output Block b7bf3a5df43989dd97f0fa97ebce2f4a 
+Plaintext 1 
+Ciphertext 0 
+
+Segment #2 
+Input Block 00020406080a0c0e10121416181a1c1f 
+Output Block ee93d380e0f01117fffd78017599514a 
+Plaintext 0 
+Ciphertext 1 
+
+Segment #3 
+Input Block 0004080c1014181c2024282c3034383e 
+Output Block 857749898b3602aad91e699911de89b0 
+Plaintext 0 
+Ciphertext 1 
+
+Segment #4 
+Input Block 0008101820283038404850586068707c 
+Output Block dce81c80810e2ba343a6bb402716b7a8 
+Plaintext 1
+Ciphertext 0 
+
+Segment #5 
+Input Block 00102030405060708090a0b0c0d0e0f9 
+Output Block e5517bfcdccea00501350a601f754823 
+Plaintext 0 
+Ciphertext 1 
+
+Segment #6 
+Input Block 0020406080a0c0e10121416181a1c1f2 
+Output Block 15799c7f4081a78cc41f29955349c5a0 
+Plaintext 0 
+Ciphertext 0 
+
+Segment #7 
+Input Block 004080c1014181c2024282c3034383e4 
+Output Block 84d246bdb391f6a7979ff5ccb8467262 
+Plaintext 0 
+Ciphertext 1 
+
+Segment #8 
+Input Block 008101820283038404850586068707c8 
+Output Block bb9e05db9855a9e7e3837a648dd4c3b0 
+Plaintext 0
+Ciphertext 1 
+
+Segment #9 
+Input Block 0102030405060708090a0b0c0d0e0f90 
+Output Block a413c5714f70287dfcd943004bf7ac8e 
+Plaintext 0 
+Ciphertext 1 
+
+Segment #10 
+Input Block 020406080a0c0e10121416181a1c1f20 
+Output Block a7310abf87610d66edf6c892a84460d5 
+Plaintext 0 
+Ciphertext 1 
+
+Segment #11 
+Input Block 04080c1014181c2024282c3034383e40 
+Output Block 8aec6712d89bd147c83b51d787b11399 
+Plaintext 1 
+Ciphertext 0 
+
+Segment #12 
+Input Block 08101820283038404850586068707c81 
+Output Block 2ff05b620f68134f4ba92deffbfc93b2 
+Plaintext 0 
+Ciphertext 0 
+
+Segment #13 
+Input Block 102030405060708090a0b0c0d0e0f902 
+Output Block 819208afd5284316065a76bead028ad3 
+Plaintext 1 
+Ciphertext 0 
+
+Segment #14 
+Input Block 20406080a0c0e10121416181a1c1f205 
+Output Block 1914ed64b2115167ce2ca4c813da5245 
+Plaintext 0 
+Ciphertext 0 
+
+Segment #15 
+Input Block 4080c1014181c2024282c3034383e40a 
+Output Block 638abae8724a954ae9e1e2e119deb6e1 
+Plaintext 0 
+Ciphertext 0 
+
+Segment #16 
+Input Block 8101820283038404850586068707c814 
+Output Block 2b4f488a3f958c52a3f1db2da938360e 
+Plaintext 1 
+Ciphertext 1 
+

@@ -1,0 +1,227 @@
+CFB8-AES192.Encrypt
+
+Key 8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b
+IV 000102030405060708090a0b0c0d0e0f
+
+Segment #1 
+Input Block 000102030405060708090a0b0c0d0e0f 
+Output Block a609b38df3b1133dddff2718ba09565e  
+Plaintext 6b 
+Ciphertext cd 
+
+Segment #2 
+Input Block 0102030405060708090a0b0c0d0e0fcd 
+Output Block 63c82e99e7289617c49e6851e082142a  
+Plaintext c1 
+Ciphertext a2 
+
+Segment #3 
+Input Block 02030405060708090a0b0c0d0e0fcda2 
+Output Block ec40a5497264bfb4d6820aaae73f75af 
+Plaintext be 
+Ciphertext 52 
+
+Segment #4 
+Input Block 030405060708090a0b0c0d0e0fcda252 
+Output Block fc011a96afe968c32bae6495173a9154 
+Plaintext e2 
+Ciphertext 1e 
+
+Segment #5 
+Input Block 0405060708090a0b0c0d0e0fcda2521e  
+Output Block de019e09ac995ba46a42916ef77d8fe5 
+Plaintext 2e 
+Ciphertext f0  
+
+Segment #6 
+Input Block 05060708090a0b0c0d0e0fcda2521ef0  
+Output Block e980477efb7f896e07c4a2d527e7b537 
+Plaintext 40
+Ciphertext a9
+
+Segment #7 
+Input Block 060708090a0b0c0d0e0fcda2521ef0a9 
+Output Block 9a9a77b11709b36e08e9321ae8b1e539 
+Plaintext 9f
+Ciphertext 05
+
+Segment #8 
+Input Block 0708090a0b0c0d0e0fcda2521ef0a905 
+Output Block a0976d856da260a34104d1a80953db4c 
+Plaintext 96
+Ciphertext ca
+
+Segment #9 
+Input Block 08090a0b0c0d0e0fcda2521ef0a905ca  
+Output Block addb26efd21de4d002474c7748e0bc1d  
+Plaintext e9
+Ciphertext 44 
+
+Segment #10 
+
+Input Block 090a0b0c0d0e0fcda2521ef0a905ca44  
+Output Block f0c410ad6512c5177a5ee40a60de01b8 
+Plaintext 3d 
+Ciphertext cd 
+
+Segment #11 
+Input Block 0a0b0c0d0e0fcda2521ef0a905ca44cd 
+Output Block 7bbf71f2b4f5cf68f3c0c1b9235dbd53 
+Plaintext 7e 
+Ciphertext 05 
+
+Segment #12 
+Input Block 0b0c0d0e0fcda2521ef0a905ca44cd05 
+Output Block 6dafb26e3c63b350811394b382e14d69 
+Plaintext 11 
+Ciphertext 7c 
+
+Segment #13 
+Input Block 0c0d0e0fcda2521ef0a905ca44cd057c 
+Output Block ccd6e25255a80e9bdbec9fbc26e5fad6 
+Plaintext 73 
+Ciphertext bf 
+
+Segment #14 
+Input Block 0d0e0fcda2521ef0a905ca44cd057cbf 
+Output Block 9e33550f6d47bda77f4f3108181ab21c 
+Plaintext 93 
+Ciphertext 0d 
+
+Segment #15 
+Input Block 0e0fcda2521ef0a905ca44cd057cbf0d 
+Output Block 50b3eae29a6623fbef6d726dbda675a8 
+Plaintext 17 
+Ciphertext 47 
+
+Segment #16 
+Input Block 0fcda2521ef0a905ca44cd057cbf0d47 
+Output Block 8a2a57d1b9158539ef7ff42b33bf0a4a 
+Plaintext 2a 
+Ciphertext a0
+
+Segment #17 
+Input Block cda2521ef0a905ca44cd057cbf0d47a0 
+Output Block c94e9102ac731d2f127b657d810ef5a8 
+Plaintext ae 
+Ciphertext 67 
+
+Segment #18 
+Input Block a2521ef0a905ca44cd057cbf0d47a067 
+Output Block a765ed650568fbe386660def5f8d491d 
+Plaintext 2d
+Ciphertext 8a 
+
+CFB8-AES192.Decrypt
+
+Key 8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b 
+IV 000102030405060708090a0b0c0d0e0f 
+
+Segment #1 
+Input Block 000102030405060708090a0b0c0d0e0f 
+Output Block a609b38df3b1133dddff2718ba09565e  
+Plaintext 6b 
+Ciphertext cd 
+
+Segment #2 
+Input Block 0102030405060708090a0b0c0d0e0fcd 
+Output Block 63c82e99e7289617c49e6851e082142a  
+Plaintext c1 
+Ciphertext a2 
+
+Segment #3 
+Input Block 02030405060708090a0b0c0d0e0fcda2 
+Output Block ec40a5497264bfb4d6820aaae73f75af 
+Plaintext be 
+Ciphertext 52 
+
+Segment #4 
+Input Block 030405060708090a0b0c0d0e0fcda252 
+Output Block fc011a96afe968c32bae6495173a9154 
+Plaintext e2 
+Ciphertext 1e 
+
+Segment #5 
+Input Block 0405060708090a0b0c0d0e0fcda2521e  
+Output Block de019e09ac995ba46a42916ef77d8fe5 
+Plaintext 2e 
+Ciphertext f0  
+
+Segment #6 
+Input Block 05060708090a0b0c0d0e0fcda2521ef0  
+Output Block e980477efb7f896e07c4a2d527e7b537 
+Plaintext 40
+Ciphertext a9
+
+Segment #7 
+Input Block 060708090a0b0c0d0e0fcda2521ef0a9 
+Output Block 9a9a77b11709b36e08e9321ae8b1e539 
+Plaintext 9f
+Ciphertext 05
+
+Segment #8 
+Input Block 0708090a0b0c0d0e0fcda2521ef0a905 
+Output Block a0976d856da260a34104d1a80953db4c 
+Plaintext 96
+Ciphertext ca
+
+Segment #9 
+Input Block 08090a0b0c0d0e0fcda2521ef0a905ca  
+Output Block addb26efd21de4d002474c7748e0bc1d  
+Plaintext e9
+Ciphertext 44 
+
+Segment #10 
+
+Input Block 090a0b0c0d0e0fcda2521ef0a905ca44  
+Output Block f0c410ad6512c5177a5ee40a60de01b8 
+Plaintext 3d 
+Ciphertext cd 
+
+Segment #11 
+Input Block 0a0b0c0d0e0fcda2521ef0a905ca44cd 
+Output Block 7bbf71f2b4f5cf68f3c0c1b9235dbd53 
+Plaintext 7e 
+Ciphertext 05 
+
+Segment #12 
+Input Block 0b0c0d0e0fcda2521ef0a905ca44cd05 
+Output Block 6dafb26e3c63b350811394b382e14d69 
+Plaintext 11 
+Ciphertext 7c 
+
+Segment #13 
+Input Block 0c0d0e0fcda2521ef0a905ca44cd057c 
+Output Block ccd6e25255a80e9bdbec9fbc26e5fad6 
+Plaintext 73 
+Ciphertext bf 
+
+Segment #14 
+Input Block 0d0e0fcda2521ef0a905ca44cd057cbf 
+Output Block 9e33550f6d47bda77f4f3108181ab21c 
+Plaintext 93 
+Ciphertext 0d 
+
+Segment #15 
+Input Block 0e0fcda2521ef0a905ca44cd057cbf0d 
+Output Block 50b3eae29a6623fbef6d726dbda675a8 
+Plaintext 17 
+Ciphertext 47 
+
+Segment #16 
+Input Block 0fcda2521ef0a905ca44cd057cbf0d47 
+Output Block 8a2a57d1b9158539ef7ff42b33bf0a4a 
+Plaintext 2a 
+Ciphertext a0
+
+Segment #17 
+Input Block cda2521ef0a905ca44cd057cbf0d47a0 
+Output Block c94e9102ac731d2f127b657d810ef5a8 
+Plaintext ae 
+Ciphertext 67 
+
+Segment #18 
+Input Block a2521ef0a905ca44cd057cbf0d47a067 
+Output Block a765ed650568fbe386660def5f8d491d 
+Plaintext 2d
+Ciphertext 8a
