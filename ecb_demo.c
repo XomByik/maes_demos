@@ -4,54 +4,9 @@
 #include <ctype.h>
 #include <stdint.h> // Potrebne pre uint8_t na Windows
 #include "libs/micro_aes.h"
+#include "common.h"
 
-// Funkcia na konverziu hexadecimalneho retazca na binarne hodnoty
-void hex_to_bin(const char* hex, uint8_t* bin, size_t len) {
-    for (size_t i = 0; i < len; i++) {
-        sscanf(hex + i * 2, "%2hhx", &bin[i]);
-    }
-}
-
-// Pomocna funkcia na vypis binarnych dat ako hexadecimalnych hodnot
-void print_hex(const uint8_t* data, size_t len) {
-    for (size_t i = 0; i < len; i++) {
-        printf("%02x", data[i]);
-    }
-    printf("\n");
-}
-
-// Vlastna implementacia strdup ak je potrebna
-char* my_strdup(const char* s) {
-    size_t len = strlen(s) + 1;  // +1 pre koncovy nulovy znak
-    char* new_str = malloc(len);
-    if (new_str) {
-        memcpy(new_str, s, len);
-    }
-    return new_str;
-}
-
-// Odstrani biele znaky na zaciatku a konci retazca
-char* trim(char* str) {
-    char* end;
-    
-    // Preskoci biele znaky na zaciatku
-    while(isspace((unsigned char)*str)) str++;
-    
-    // Prazdny retazec?
-    if(*str == 0)  
-        return str;
-    
-    // Odstrani biele znaky na konci
-    end = str + strlen(str) - 1;
-    while(end > str && isspace((unsigned char)*end)) end--;
-    
-    // Prida ukoncovaci nulovy znak
-    *(end+1) = 0;
-    
-    return str;
-}
-
-int main(int argc, char* argv[]) {
+int main() {
     // Zistenie, ci sa jedna o 128, 192 alebo 256 bitovy rezim podla definicie v micro_aes.h
     #if AES___ == 256
         const int aes_bits = 256;
@@ -139,8 +94,14 @@ int main(int argc, char* argv[]) {
                     printf("Test #%d (Block #%d, Decrypt):\n", test_count, block_number);
                     
                     // Konverzia hex na binarne hodnoty
-                    hex_to_bin(hex_key, key, key_size_bytes);
-                    hex_to_bin(hex_ciphertext, ciphertext, 16);  // AES blok je vzdy 16 bajtov
+                    if (hex_to_bin(hex_key, key, key_size_bytes) != 0) {
+                        fprintf(stderr, "Error parsing KEY hex for test %d.\n", test_count);
+                        continue; // Skip this test case
+                    }
+                    if (hex_to_bin(hex_ciphertext, ciphertext, 16) != 0) { // AES blok je vzdy 16 bajtov
+                        fprintf(stderr, "Error parsing CIPHERTEXT hex for test %d.\n", test_count);
+                        continue; // Skip this test case
+                    }
                     
                     printf("Kluc: ");
                     print_hex(key, key_size_bytes);
@@ -157,7 +118,10 @@ int main(int argc, char* argv[]) {
                         
                         // Konverzia ocakavaneho plaintextu
                         uint8_t expected_plaintext[16];
-                        hex_to_bin(value, expected_plaintext, 16);
+                        if (hex_to_bin(value, expected_plaintext, 16) != 0) {
+                            fprintf(stderr, "Error parsing expected PLAINTEXT hex for test %d.\n", test_count);
+                            continue; // Skip this test case
+                        }
                         
                         printf("Ocakavany plaintext: ");
                         print_hex(expected_plaintext, 16);
@@ -191,8 +155,14 @@ int main(int argc, char* argv[]) {
                     printf("Test #%d (Block #%d, Encrypt):\n", test_count, block_number);
                     
                     // Konverzia hex na binarne hodnoty
-                    hex_to_bin(hex_key, key, key_size_bytes);
-                    hex_to_bin(hex_plaintext, plaintext, 16);  // AES blok je vzdy 16 bajtov
+                    if (hex_to_bin(hex_key, key, key_size_bytes) != 0) {
+                        fprintf(stderr, "Error parsing KEY hex for test %d.\n", test_count);
+                        continue; // Skip this test case
+                    }
+                    if (hex_to_bin(hex_plaintext, plaintext, 16) != 0) { // AES blok je vzdy 16 bajtov
+                        fprintf(stderr, "Error parsing PLAINTEXT hex for test %d.\n", test_count);
+                        continue; // Skip this test case
+                    }
                     
                     printf("Kluc: ");
                     print_hex(key, key_size_bytes);
@@ -206,7 +176,10 @@ int main(int argc, char* argv[]) {
                     
                     // Konverzia ocakavaneho ciphertextu
                     uint8_t expected_ciphertext[16];
-                    hex_to_bin(value, expected_ciphertext, 16);
+                    if (hex_to_bin(value, expected_ciphertext, 16) != 0) {
+                        fprintf(stderr, "Error parsing expected CIPHERTEXT hex for test %d.\n", test_count);
+                        continue; // Skip this test case
+                    }
                     
                     printf("Ocakavany ciphertext: ");
                     print_hex(expected_ciphertext, 16);

@@ -14,7 +14,9 @@
 /**----------------------------------------------------------------------------
 You can use different AES algorithms by changing this macro. Default is AES-128
  -----------------------------------------------------------------------------*/
+#ifndef AES___
 #define AES___     256     /* or 256 (or 192; not standardized in some modes) */
+#endif
 
 /**----------------------------------------------------------------------------
 AES block-cipher modes of operation. The following modes can be enabled/disabled
@@ -65,7 +67,7 @@ AES block-cipher modes of operation. The following modes can be enabled/disabled
 #endif
 
 #if EAX
-#define EAXP         1     /* EAX-prime, as specified by IEEE Std 1703        */
+#define EAXP         0     /* EAX-prime, as specified by IEEE Std 1703        */
 #endif
 
 #define WTF ! (BLOCKCIPHERS | AEAD_MODES)
@@ -85,8 +87,11 @@ Refer to the BOTTOM OF THIS DOCUMENT for some explanations about these macros:
 
 #if FPE
 #define CUSTOM_ALPHABET 0  /* if disabled, use default alphabet (digits 0..9) */
+// Only define FF_X if it hasn't been defined externally (e.g., via command line)
+#ifndef FF_X
 #define FF_X            1  /* algorithm type:  (1) for FF1, or (3) for FF3-1  */
-#endif
+#endif // FF_X
+#endif // FPE
 
 #if CTR_NA
 #define CTR_IV_LENGTH  12  /* for using the last 32 bits as counter           */
@@ -94,8 +99,12 @@ Refer to the BOTTOM OF THIS DOCUMENT for some explanations about these macros:
 #endif
 
 #if CCM
+#ifndef CCM_NONCE_LEN
 #define CCM_NONCE_LEN  11  /* for 32-bit count (since one byte is reserved).  */
-#define CCM_TAG_LEN    16  /* must be an even number in the range of 4..16    */
+#endif
+#ifndef CCM_TAG_LEN
+#define CCM_TAG_LEN    16  /* 16 bytes = 128 bits */
+#endif
 #endif
 
 #ifndef GCM_NONCE_LEN
@@ -410,7 +419,7 @@ Main functions for FPE-AES; more info at the bottom of this page.
 char AES_FPE_encrypt( const uint8_t* key,     /* encryption key               */
                       const uint8_t* tweak,   /* tweak bytes                  */
 #if FF_X == 3
-#define FF3_TWEAK_LEN 7                       /* either 8 (FF3), or 7 (FF3-1) */
+#define FF3_TWEAK_LEN 8                       /* either 8 (FF3), or 7 (FF3-1) */
 #else
                       const size_t tweakLen,  /* size of tweak array          */
 #endif

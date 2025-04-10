@@ -2,14 +2,43 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <stdint.h> // Potrebne pre uint8_t na Windows
+#include <stdint.h>
 #include "libs/micro_aes.h"
 
-// Funkcia na konverziu hexadecimalneho retazca na binarne hodnoty
-void hex_to_bin(const char* hex, uint8_t* bin, size_t len) {
-    for (size_t i = 0; i < len; i++) {
-        sscanf(hex + i * 2, "%2hhx", &bin[i]);
+// Helper function to convert hex string to binary data
+// Returns 0 on success, -1 on error (invalid format or length)
+int hex_to_bin(const char *hex, uint8_t *bin, size_t bin_len) {
+    if (hex == NULL || bin == NULL) {
+         fprintf(stderr, "Error: NULL pointer passed to hex_to_bin.\n");
+         return -1;
     }
+    size_t hex_len = strlen(hex);
+    // Check if hex string length is exactly double the binary length
+    if (hex_len != bin_len * 2) {
+        // Allow empty string if bin_len is 0
+        if (!(bin_len == 0 && hex_len == 0)) {
+             fprintf(stderr, "Error: Hex string length (%zu) must be (%zu), double the expected binary length (%zu).\n", hex_len, bin_len*2, bin_len);
+             return -1;
+        }
+    }
+    if (bin_len == 0) {
+        return 0; // Nothing to convert
+    }
+
+    for (size_t i = 0; i < bin_len; ++i) {
+        // Ensure the characters being read are valid hex digits
+        if (!isxdigit((unsigned char)hex[i * 2]) || !isxdigit((unsigned char)hex[i * 2 + 1])) {
+             fprintf(stderr, "Error: Invalid non-hex character encountered in string '%s' at index %zu.\n", hex, i*2);
+             return -1;
+        }
+        unsigned int byte_val;
+        if (sscanf(hex + i * 2, "%2x", &byte_val) != 1) {
+             fprintf(stderr, "Error: sscanf failed to parse hex byte from '%s' at index %zu.\n", hex, i*2);
+             return -1; // Should not happen if isxdigit passed, but check anyway
+        }
+        bin[i] = (uint8_t)byte_val; // Cast to uint8_t
+    }
+    return 0; // Indicate success
 }
 
 // Pomocna funkcia na vypis binarnych dat ako hexadecimalnych hodnot
@@ -51,7 +80,7 @@ char* trim(char* str) {
     return str;
 }
 
-int main(int argc, char* argv[]) {
+int main() {
     // Zistenie, ci sa jedna o 128 alebo 256 bitovy rezim podla definicie v micro_aes.h
     #if AES___ == 256
         const int aes_bits = 256;
@@ -182,21 +211,31 @@ int main(int argc, char* argv[]) {
         
         // Parsovanie parov kluc-hodnota
         if (strncmp(line, "Key1", 4) == 0) {
-            // Zaciatok noveho testovacieho vektora
             free(hex_key1);
-            free(hex_ptx);
-            free(hex_ctx);
-            hex_ptx = NULL;
-            hex_ctx = NULL;
-            ptx_len = 0;
-            ctx_len = 0;
-            in_ctx_section = 0;
-            
             hex_key1 = my_strdup(trim(line + 5));
-        } else if (strncmp(line, "Key2", 4) == 0) {
+            if (hex_to_bin(hex_key1, key1, key_size_bytes) != 0) {
+                fprintf(stderr, "Error parsing Key1 hex.\n");
+                free(hex_key1); hex_key1 = NULL;
+            }
+            continue;
+        }
+        if (strncmp(line, "Key2", 4) == 0) {
+            free(hex_key2);
             hex_key2 = my_strdup(trim(line + 5));
-        } else if (strncmp(line, "DUCN", 4) == 0) {
-            hex_tweak = my_strdup(trim(line + 5));
+            if (hex_to_bin(hex_key2, key2, key_size_bytes) != 0) {
+                fprintf(stderr, "Error parsing Key2 hex.\n");
+                free(hex_key2); hex_key2 = NULL;
+            }
+            continue;
+        }
+        if (strncmp(line, "Tweak", 5) == 0) {
+            free(hex_tweak);
+            hex_tweak = my_strdup(trim(line + 6));
+            if (hex_to_bin(hex_tweak, tweak, 16) != 0) { // Tweak je vzdy 16 bajtov
+                fprintf(stderr, "Error parsing Tweak hex.\n");
+                free(hex_tweak); hex_tweak = NULL;
+            }
+            continue;
         } else if (strncmp(line, "PTX", 3) == 0) {
             char* value = trim(line + 4);
             

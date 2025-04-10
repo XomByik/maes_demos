@@ -1649,7 +1649,10 @@ char AES_EAX_decrypt( const uint8_t* key, const uint8_t* nonce,
 \*----------------------------------------------------------------------------*/
 #if IMPLEMENT(OCB)
 
-static void nop( const block_t x, block_t y ) {}
+static void nop( const block_t x, block_t y ) {    
+    (void)x;
+    (void)y;
+}
 
 /** Calculate the offset block (Δ_i) at a specified index, given the initial Δ_0
  * and L$ blocks. This method has minimum memory usage, but it might be slow. To

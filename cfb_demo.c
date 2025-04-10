@@ -7,8 +7,18 @@
 
 // Funkcia na konverziu hexadecimalneho retazca na binarne hodnoty
 void hex_to_bin(const char* hex, uint8_t* bin, size_t len) {
+    unsigned int byte_val; // Pouzijeme unsigned int pre sscanf
     for (size_t i = 0; i < len; i++) {
-        sscanf(hex + i * 2, "%2hhx", &bin[i]);
+        // Pouzijeme %2x na citanie dvoch hex znakov do unsigned int
+        if (sscanf(hex + i * 2, "%2x", &byte_val) != 1) {
+             // Pridanie chybovej hlasky pre pripad zlyhania sscanf
+             // Pouzijeme %lu a pretypujeme size_t na unsigned long pre lepsiu kompatibilitu
+             fprintf(stderr, "Error: Failed to parse hex byte from '%s' at index %lu.\n", hex, (unsigned long)(i*2));
+             // Mozno by bolo vhodne vratit chybovy kod alebo ukoncit program
+             // Pre jednoduchost tu len pokracujeme, ale bin[i] bude mat nedefinovanu hodnotu
+             continue; 
+        }
+        bin[i] = (uint8_t)byte_val; // Pretypujeme na uint8_t
     }
 }
 
@@ -65,7 +75,7 @@ int get_segment_size(const char* filename) {
 }
 
 // Funkcia na spracovanie CFB-1 rezimu (1-bitovy segment)
-void process_cfb1_encrypt(uint8_t* key, int key_size_bytes, uint8_t* iv, uint8_t plaintext_bit, uint8_t* result_bit) {
+void process_cfb1_encrypt(uint8_t* key, uint8_t* iv, uint8_t plaintext_bit, uint8_t* result_bit) {
     uint8_t temp_input[16] = {0};  // Prazdny vstup
     uint8_t temp_output[16] = {0}; // Vystupny blok
     
@@ -92,7 +102,7 @@ void process_cfb1_encrypt(uint8_t* key, int key_size_bytes, uint8_t* iv, uint8_t
 }
 
 // Opravena funkcia na spracovanie CFB-1 rezimu (1-bitovy segment) pre desifrovanie
-void process_cfb1_decrypt(uint8_t* key, int key_size_bytes, uint8_t* iv, uint8_t ciphertext_bit, uint8_t* result_bit) {
+void process_cfb1_decrypt(uint8_t* key, uint8_t* iv, uint8_t ciphertext_bit, uint8_t* result_bit) {
     uint8_t temp_input[16] = {0};
     uint8_t temp_output[16] = {0};
     
@@ -118,7 +128,7 @@ void process_cfb1_decrypt(uint8_t* key, int key_size_bytes, uint8_t* iv, uint8_t
 }
 
 // Oprava funkcie CFB-8 sifrovania
-void process_cfb8_encrypt(uint8_t* key, int key_size_bytes, uint8_t* iv, uint8_t plaintext_byte, uint8_t* result_byte) {
+void process_cfb8_encrypt(uint8_t* key, uint8_t* iv, uint8_t plaintext_byte, uint8_t* result_byte) {
     // Pouzijeme priamo funkciu AES_CFB_encrypt s 1-bajtovym plaintextom
     uint8_t temp_input[1] = { plaintext_byte };
     uint8_t temp_output[1] = { 0 };
@@ -135,7 +145,7 @@ void process_cfb8_encrypt(uint8_t* key, int key_size_bytes, uint8_t* iv, uint8_t
 }
 
 // Oprava funkcie CFB-8 desifrovania
-void process_cfb8_decrypt(uint8_t* key, int key_size_bytes, uint8_t* iv, uint8_t ciphertext_byte, uint8_t* result_byte) {
+void process_cfb8_decrypt(uint8_t* key, uint8_t* iv, uint8_t ciphertext_byte, uint8_t* result_byte) {
     // Pouzijeme priamo funkciu AES_CFB_decrypt s 1-bajtovym ciphertextom
     uint8_t temp_input[1] = { ciphertext_byte };
     uint8_t temp_output[1] = { 0 };
@@ -152,7 +162,7 @@ void process_cfb8_decrypt(uint8_t* key, int key_size_bytes, uint8_t* iv, uint8_t
 }
 
 // Funkcia na spracovanie CFB-128 rezimu (128-bitovy segment / 16 bajtov)
-void process_cfb128_encrypt(uint8_t* key, int key_size_bytes, uint8_t* iv, uint8_t* plaintext, uint8_t* ciphertext) {
+void process_cfb128_encrypt(uint8_t* key, uint8_t* iv, uint8_t* plaintext, uint8_t* ciphertext) {
     // Pre CFB-128 pouzijeme priamo funkciu z kniznice
     AES_CFB_encrypt(key, iv, plaintext, 16, ciphertext);
     // Aktualizacia IV na ďalsi blok
@@ -160,14 +170,14 @@ void process_cfb128_encrypt(uint8_t* key, int key_size_bytes, uint8_t* iv, uint8
 }
 
 // Funkcia na spracovanie CFB-128 rezimu (128-bitovy segment / 16 bajtov) pre desifrovanie
-void process_cfb128_decrypt(uint8_t* key, int key_size_bytes, uint8_t* iv, uint8_t* ciphertext, uint8_t* plaintext) {
+void process_cfb128_decrypt(uint8_t* key, uint8_t* iv, uint8_t* ciphertext, uint8_t* plaintext) {
     // Pre CFB-128 pouzijeme priamo funkciu z kniznice
     AES_CFB_decrypt(key, iv, ciphertext, 16, plaintext);
     // Aktualizacia IV na ďalsi blok
     memcpy(iv, ciphertext, 16);
 }
 
-int main(int argc, char* argv[]) {
+int main() {
     // Zistenie, ci sa jedna o 128, 192 alebo 256 bitovy rezim podla definicie v micro_aes.h
     #if AES___ == 256
         const int aes_bits = 256;
@@ -200,7 +210,7 @@ int main(int argc, char* argv[]) {
     int key_size_bytes = aes_bits / 8;
     uint8_t key[32];  // Max 256 bits (32 bytes)
     uint8_t iv[16];   // IV je vzdy 16 bajtov
-    uint8_t original_iv[16]; // Kópia povodneho IV pre testovanie
+    uint8_t original_iv[16] = {0}; // Kópia povodneho IV pre testovanie
     
     // Prejdeme vsetky testovacie subory
     for (int file_idx = 0; file_idx < 3; file_idx++) {
@@ -361,7 +371,7 @@ int main(int argc, char* argv[]) {
                             printf("Aktualny vstupny blok (IV): ");
                             print_hex(iv, 16);
 
-                            process_cfb1_encrypt(key, key_size_bytes, iv, plaintext_bit, &result_bit);
+                            process_cfb1_encrypt(key, iv, plaintext_bit, &result_bit);
                             
                             printf("Ocakavany ciphertext: %d\n", ciphertext_bit);
                             printf("Vypocitany ciphertext: %d\n", result_bit);
@@ -378,7 +388,7 @@ int main(int argc, char* argv[]) {
                             printf("Aktualny vstupny blok (IV): ");
                             print_hex(iv, 16);
 
-                            process_cfb1_decrypt(key, key_size_bytes, iv, ciphertext_bit, &result_bit);
+                            process_cfb1_decrypt(key, iv, ciphertext_bit, &result_bit);
 
                             printf("Ocakavany plaintext: %d\n", plaintext_bit);
                             printf("Vypocitany plaintext: %d\n", result_bit);
@@ -396,14 +406,25 @@ int main(int argc, char* argv[]) {
                         uint8_t plaintext_byte = 0;
                         uint8_t expected_ciphertext_byte = 0;
                         uint8_t result_byte = 0;
+                        unsigned int byte_val; // Pouzijeme unsigned int pre sscanf
                         
                         // Konverzia plaintextu a ciphertextu z hex retazca na byte
                         if (plaintext_str && strlen(plaintext_str) >= 2) {
-                            sscanf(plaintext_str, "%2hhx", &plaintext_byte);
+                            // Pouzijeme %2x na citanie dvoch hex znakov do unsigned int
+                            if (sscanf(plaintext_str, "%2x", &byte_val) == 1) {
+                                plaintext_byte = (uint8_t)byte_val; // Pretypujeme na uint8_t
+                            } else {
+                                fprintf(stderr, "Error parsing plaintext hex: %s\n", plaintext_str);
+                            }
                         }
                         
                         if (ciphertext_str && strlen(ciphertext_str) >= 2) {
-                            sscanf(ciphertext_str, "%2hhx", &expected_ciphertext_byte);
+                            // Pouzijeme %2x na citanie dvoch hex znakov do unsigned int
+                            if (sscanf(ciphertext_str, "%2x", &byte_val) == 1) {
+                                expected_ciphertext_byte = (uint8_t)byte_val; // Pretypujeme na uint8_t
+                            } else {
+                                fprintf(stderr, "Error parsing ciphertext hex: %s\n", ciphertext_str);
+                            }
                         }
                         
                         // Overenie, ze IV zodpoveda ocakavanemu vstupnemu bloku
@@ -421,7 +442,7 @@ int main(int argc, char* argv[]) {
                             print_hex(iv, 16);
 
                             // Samotne testovanie CFB-8 sifrovania
-                            process_cfb8_encrypt(key, key_size_bytes, iv, plaintext_byte, &result_byte);
+                            process_cfb8_encrypt(key, iv, plaintext_byte, &result_byte);
                             
                             printf("Ocakavany ciphertext: %02x\n", expected_ciphertext_byte);
                             printf("Vypocitany ciphertext: %02x\n", result_byte);
@@ -441,7 +462,7 @@ int main(int argc, char* argv[]) {
                             printf("Aktualny vstupny blok (IV): ");
                             print_hex(iv, 16);
 
-                            process_cfb8_decrypt(key, key_size_bytes, iv, expected_ciphertext_byte, &result_byte);
+                            process_cfb8_decrypt(key, iv, expected_ciphertext_byte, &result_byte);
 
                             printf("Ocakavany plaintext: %02x\n", plaintext_byte);
                             printf("Vypocitany plaintext: %02x\n", result_byte);
@@ -486,7 +507,7 @@ int main(int argc, char* argv[]) {
                             print_hex(iv, 16);
 
                             // Samotne testovanie CFB-128 sifrovania
-                            process_cfb128_encrypt(key, key_size_bytes, iv, plaintext_bytes, result_bytes);
+                            process_cfb128_encrypt(key, iv, plaintext_bytes, result_bytes);
 
                             printf("Ocakavany ciphertext: ");
                             print_hex(expected_ciphertext_bytes, 16);
@@ -509,7 +530,7 @@ int main(int argc, char* argv[]) {
                             print_hex(iv, 16);
                             
                             // Samotne testovanie CFB-128 desifrovania
-                            process_cfb128_decrypt(key, key_size_bytes, iv, expected_ciphertext_bytes, result_bytes);
+                            process_cfb128_decrypt(key, iv, expected_ciphertext_bytes, result_bytes);
          
                             printf("Ocakavany plaintext: ");
                             print_hex(plaintext_bytes, 16);

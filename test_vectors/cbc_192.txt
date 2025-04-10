@@ -13,7 +13,7 @@ Block #2
 Plaintext ae2d8a571e03ac9c9eb76fac45af8e51 
 Input Block e12f97e55dbfcfa1efcf7796da0fffb9 
 Output Block b4d9ada9ad7dedf4e5e738763f69145a 
-Ciphertext b4d9ada9ad7dedf4e5e738763f69145aň
+Ciphertext b4d9ada9ad7dedf4e5e738763f69145a
 
 Block #3 
 

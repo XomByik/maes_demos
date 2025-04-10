@@ -1,0 +1,13 @@
+AEAD_AES_SIV_CMAC_256
+
+A.1. Deterministic Authenticated Encryption Example
+
+Input:
+Key: fffefdfcfbfaf9f8f7f6f5f4f3f2f1f0f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff
+AD: 101112131415161718191a1b1c1d1e1f2021222324252627
+Plaintext: 112233445566778899aabbccddee
+
+Output:
+CMAC(final): 85632d07c6e8f37f950acd320a2ecc93
+Ciphertext: 40c02b9690c4dc04daef7f6afe5c
+IV || C: 85632d07c6e8f37f950acd320a2ecc9340c02b9690c4dc04daef7f6afe5c

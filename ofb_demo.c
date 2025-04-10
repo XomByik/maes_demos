@@ -2,14 +2,43 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <stdint.h> // Potrebne pre uint8_t na Windows
+#include <stdint.h>
 #include "libs/micro_aes.h"
 
-// Funkcia na konverziu hexadecimalneho retazca na binarne hodnoty
-void hex_to_bin(const char* hex, uint8_t* bin, size_t len) {
-    for (size_t i = 0; i < len; i++) {
-        sscanf(hex + i * 2, "%2hhx", &bin[i]);
+// Helper function to convert hex string to binary data
+// Returns 0 on success, -1 on error (invalid format or length)
+int hex_to_bin(const char *hex, uint8_t *bin, size_t bin_len) {
+    if (hex == NULL || bin == NULL) {
+         fprintf(stderr, "Error: NULL pointer passed to hex_to_bin.\n");
+         return -1;
     }
+    size_t hex_len = strlen(hex);
+    // Check if hex string length is exactly double the binary length
+    if (hex_len != bin_len * 2) {
+        // Allow empty string if bin_len is 0
+        if (!(bin_len == 0 && hex_len == 0)) {
+             fprintf(stderr, "Error: Hex string length (%zu) must be (%zu), double the expected binary length (%zu).\n", hex_len, bin_len*2, bin_len);
+             return -1;
+        }
+    }
+    if (bin_len == 0) {
+        return 0; // Nothing to convert
+    }
+
+    for (size_t i = 0; i < bin_len; ++i) {
+        // Ensure the characters being read are valid hex digits
+        if (!isxdigit((unsigned char)hex[i * 2]) || !isxdigit((unsigned char)hex[i * 2 + 1])) {
+             fprintf(stderr, "Error: Invalid non-hex character encountered in string '%s' at index %zu.\n", hex, i*2);
+             return -1;
+        }
+        unsigned int byte_val;
+        if (sscanf(hex + i * 2, "%2x", &byte_val) != 1) {
+             fprintf(stderr, "Error: sscanf failed to parse hex byte from '%s' at index %zu.\n", hex, i*2);
+             return -1; // Should not happen if isxdigit passed, but check anyway
+        }
+        bin[i] = (uint8_t)byte_val; // Cast to uint8_t
+    }
+    return 0; // Indicate success
 }
 
 // Pomocna funkcia na vypis binarnych dat ako hexadecimalnych hodnot
@@ -88,7 +117,7 @@ void process_ofb_decrypt(uint8_t* key, uint8_t* iv, uint8_t* ciphertext, size_t 
     }
 }
 
-int main(int argc, char* argv[]) {
+int main() {
     // Zistenie, ci sa jedna o 128, 192 alebo 256 bitovy rezim podla definicie v micro_aes.h
     #if AES___ == 256
         const int aes_bits = 256;
@@ -177,7 +206,11 @@ int main(int argc, char* argv[]) {
         if (strncmp(line, "IV", 2) == 0) {
             free(hex_iv);
             hex_iv = my_strdup(trim(line + 3));
-            printf("IV: %s\n", hex_iv);
+            if (hex_to_bin(hex_iv, iv, 16) != 0) {
+                fprintf(stderr, "Error parsing IV hex. Skipping tests until next valid IV.\n");
+                free(hex_iv); hex_iv = NULL;
+            }
+            is_first_block = 1;
             continue;
         }
         
