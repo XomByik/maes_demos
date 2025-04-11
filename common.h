@@ -3,8 +3,8 @@
 #define COMMON_H
 
 #include <stdint.h>
-#include <stdio.h> // For size_t
-#include <stdbool.h> // For bool
+#include <stdio.h>
+#include <stdbool.h> 
 
 // Function declarations
 int hex_to_bin(const char *hex, uint8_t *bin, size_t bin_len);

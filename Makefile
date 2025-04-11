@@ -71,11 +71,6 @@ $(if $(filter kw_demo.c,$1),-DKW=1) \
 $(if $(filter fpe_demo.c,$1),$(if $(findstring ff1,$2),-DFF_X=1) $(if $(findstring ff3,$2),-DFF_X=3))
 endef
 
-# Rule for FPE demos (FF1/FF3 variants) - Handles all AES sizes
-# The stem * includes ff1/ff3 and the size (e.g., ff1_128)
-fpe_demo_%: fpe_demo.c $(FPE_DEPS)
-	$(CC) $(CFLAGS) -o $@ $< $(COMMON_OBJ) $(AES_LIB_SRC) $(LIBS) -DAES___=$(word 3, $(subst _, ,$(notdir $*))) $(call GET_FLAGS,$<,$@)
-
 # Specific rules for GCM 1024 Nonce demo - Handles all AES sizes
 # Stem * is the size (e.g., 128)
 gcm_demo_%_nonce1024: gcm_demo.c $(COMMON_DEPS)
@@ -93,6 +88,20 @@ gcm_demo_%_nonce1024: gcm_demo.c $(COMMON_DEPS)
 
 %_demo_256: %_demo.c $(COMMON_DEPS)
 	$(CC) $(CFLAGS) -o $@ $< $(COMMON_OBJ) $(AES_LIB_SRC) $(LIBS) -DAES___=256 $(call GET_FLAGS,$<,$@)
+
+# Specific rules for FPE (FF1/FF3) demos - Handles all AES sizes
+# Dvoje špeciálne pravidlá pre FF1 a FF3 varianty
+
+# FF1 variant rule
+fpe_demo_ff1_%: fpe_demo.c $(FPE_DEPS)
+	$(CC) $(CFLAGS) -o $@ $< $(COMMON_OBJ) $(AES_LIB_SRC) $(LIBS) -DAES___=$* -DFF_X=1
+
+# FF3 variant rule
+fpe_demo_ff3_%: fpe_demo.c $(FPE_DEPS)
+	$(CC) $(CFLAGS) -o $@ $< $(COMMON_OBJ) $(AES_LIB_SRC) $(LIBS) -DAES___=$* -DFF_X=3
+
+# Pridáme cieľ pre kompiláciu všetkých FPE variant
+fpe: $(filter fpe_demo_%,$(ALL_EXES))
 
 # --- Specific Targets ---
 # Example: build just cfb_demo (all applicable sizes)

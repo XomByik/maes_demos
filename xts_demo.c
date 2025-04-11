@@ -290,7 +290,6 @@ cleanup:
 }
 
 int main() {
-    // Zistenie, ci sa jedna o 128 alebo 256 bitovy rezim podla definicie v micro_aes.h
     const char* test_vectors_file;
     
     #if AES___ == 256

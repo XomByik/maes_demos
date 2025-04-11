@@ -11,7 +11,7 @@
 #include "common.h"
 
 #define EAX_LINE_BUFFER_SIZE 2048
-
+#define MAX_LINE_LENGTH 75
 typedef struct {
     int count;
     char *key_hex;
