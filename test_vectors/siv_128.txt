@@ -1,6 +1,6 @@
-AEAD_AES_SIV_CMAC_256
+# AEAD_AES_SIV_CMAC_256 (AES_128)
 
-A.1. Deterministic Authenticated Encryption Example
+# A.1. Deterministic Authenticated Encryption Example
 
 Input:
 Key: fffefdfcfbfaf9f8f7f6f5f4f3f2f1f0f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff

@@ -1,455 +1,335 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <stdint.h>
-#include "libs/micro_aes.h"
+#include "eax_config.h"
 
-// Helper function to convert hex string to binary data
-// Returns 0 on success, -1 on error (invalid format or length)
-int hex_to_bin(const char *hex, uint8_t *bin, size_t bin_len) {
-    if (hex == NULL || bin == NULL) {
-         fprintf(stderr, "Error: NULL pointer passed to hex_to_bin.\n");
-         return -1;
-    }
-    size_t hex_len = strlen(hex);
-    // Check if hex string length is exactly double the binary length
-    if (hex_len != bin_len * 2) {
-        // Allow empty string if bin_len is 0
-        if (!(bin_len == 0 && hex_len == 0)) {
-             fprintf(stderr, "Error: Hex string length (%zu) must be (%zu), double the expected binary length (%zu).\n", hex_len, bin_len*2, bin_len);
-             return -1;
-        }
-    }
-    if (bin_len == 0) {
-        return 0; // Nothing to convert
-    }
+typedef enum {
+    KEY, NONCE, HEADER, MSG, CIPHER, COUNT, FAIL
+} LineType;
 
-    for (size_t i = 0; i < bin_len; ++i) {
-        // Ensure the characters being read are valid hex digits
-        if (!isxdigit((unsigned char)hex[i * 2]) || !isxdigit((unsigned char)hex[i * 2 + 1])) {
-             fprintf(stderr, "Error: Invalid non-hex character encountered in string '%s' at index %zu.\n", hex, i*2);
-             return -1;
-        }
-        unsigned int byte_val;
-        if (sscanf(hex + i * 2, "%2x", &byte_val) != 1) {
-             fprintf(stderr, "Error: sscanf failed to parse hex byte from '%s' at index %zu.\n", hex, i*2);
-             return -1; // Should not happen if isxdigit passed, but check anyway
-        }
-        bin[i] = (uint8_t)byte_val; // Cast to uint8_t
-    }
-    return 0; // Indicate success
+static LineType get_line_type(const char* line) {
+    if (strstr(line, "KEY")) return KEY;
+    if (strstr(line, "NONCE")) return NONCE;
+    if (strstr(line, "HEADER")) return HEADER;
+    if (strstr(line, "MSG")) return MSG;
+    if (strstr(line, "CIPHER")) return CIPHER;
+    if (strstr(line, "Count = ")) return COUNT;
+    if (strstr(line, "FAIL")) return FAIL;
+    return -1;
 }
 
-// Konvertuje bajty na hex retazec
-void bytesToHex(const uint8_t *bytes, size_t len, char *hex) {
-    if (!bytes || !hex) return;
-    for (size_t i = 0; i < len; i++) {
-        sprintf(hex + i * 2, "%02x", bytes[i]);
+static char* get_line_value(const char* line, const char* prefix) {
+    const char* start = strstr(line, prefix);
+    if (!start) return NULL;
+    
+    start += strlen(prefix);
+    while (isspace(*start)) start++;
+    
+    char* temp = my_strdup(start);
+    if (!temp) return NULL;
+    
+    char* trimmed = trim(temp);
+    if (trimmed != temp) {
+        memmove(temp, trimmed, strlen(trimmed) + 1);
     }
-    hex[len * 2] = '\0'; // Ukoncovacia nula
+    
+    return temp;
 }
 
-// Vlastna implementacia strdup
-char* my_strdup(const char* s) {
-    if (!s) return NULL;
-    size_t len = strlen(s) + 1;
-    char* new_str = malloc(len);
-    if (new_str) {
-        memcpy(new_str, s, len);
-    } else {
-        fprintf(stderr, "Chyba alokacie pamate v my_strdup\n");
-    }
-    return new_str;
+void free_test_case_data(TestCaseData *data) {
+    if (!data) return;
+    free(data->key_hex);
+    free(data->nonce_hex);
+    free(data->header_hex);
+    free(data->pt_hex);
+    free(data->ct_hex);
+    free(data->tag_hex);
+    memset(data, 0, sizeof(TestCaseData));
 }
 
-// Odstrani biele znaky na zaciatku a konci retazca
-char* trim(char* str) {
-    if (!str) return NULL;
-    char* end;
-    while(isspace((unsigned char)*str)) str++;
-    if(*str == 0) return str;
-    end = str + strlen(str) - 1;
-    while(end > str && isspace((unsigned char)*end)) end--;
-    *(end+1) = 0;
-    return str;
-}
+bool parse_next_test_case(FILE *fp, TestCaseData *data) {
+    char line[EAX_LINE_BUFFER_SIZE];
+    char *value;
+    bool in_test_case = false;
+    long start_pos = ftell(fp);
+    bool fail_tag_seen = false;
 
-// Porovna dve bajtove polia a vypise vysledok v hex formate
-int compareAndPrintHex(const char *title, const uint8_t *expected, const uint8_t *actual, size_t len) {
-    char expected_hex[2048] = {0}; // Dostacujuca velkost
-    char actual_hex[2048] = {0};
-
-    bytesToHex(expected, len, expected_hex);
-    bytesToHex(actual, len, actual_hex);
-
-    int match = (len == 0 || memcmp(expected, actual, len) == 0);
-
-    printf("%s:\n", title);
-    printf("  Ocakavane : %s (%zu bajtov)\n", expected_hex, len);
-    printf("  Vypocitane: %s (%zu bajtov)\n", actual_hex, len);
-    printf("  Zhoda     : %s\n", match ? "ANO" : "NIE");
-
-    return match;
-}
-
-
-// --- Struktura pre testovacie vektory ---
-
-typedef struct {
-    char *key_hex;
-    char *nonce_hex;
-    char *header_hex;
-    char *pt_hex; // Plaintext
-    char *ct_hex; // Ciphertext
-    char *tag_hex;
-} EAX_Test_Vector;
-
-// Deklaracia funkcie pre uvolnenie pamate
-void freeTestVectors(EAX_Test_Vector *vectors, int count);
-
-// --- Nacitanie testovacich vektorov ---
-
-int loadTestVectors(const char *filename, EAX_Test_Vector **vectors, int *vector_count) {
-    FILE *fp = fopen(filename, "r");
-    if (!fp) {
-        printf("Chyba pri otvarani suboru s testovacimi vektormi: %s\n", filename);
-        return 0;
-    }
-
-    char line[1024];
-    int count = 0;
-    int capacity = 10;
-    *vectors = malloc(sizeof(EAX_Test_Vector) * capacity);
-    if (!*vectors) {
-        fclose(fp);
-        printf("Chyba alokacie pamate pre vektory\n");
-        return 0;
-    }
-    memset(*vectors, 0, sizeof(EAX_Test_Vector) * capacity); // Inicializacia na nulu
-
-    EAX_Test_Vector current_vector = {0}; // Inicializacia aktualneho vektora
-    int vector_complete = 0; // Priznak kompletnosti vektora
+    free_test_case_data(data);
 
     while (fgets(line, sizeof(line), fp)) {
-        char* trimmed_line = trim(line);
-        if (strlen(trimmed_line) == 0) {
-            // Prazdny riadok znamena koniec bloku vektora
-            if (vector_complete) {
-                 if (capacity <= count) {
-                     capacity *= 2;
-                     EAX_Test_Vector *temp = realloc(*vectors, sizeof(EAX_Test_Vector) * capacity);
-                     if (!temp) {
-                         printf("Chyba realokacie pamate pre vektory\n");
-                         // Uvolnime ciastocne alokovane data
-                         free(current_vector.key_hex);
-                         free(current_vector.nonce_hex);
-                         free(current_vector.header_hex);
-                         free(current_vector.pt_hex);
-                         free(current_vector.ct_hex);
-                         free(current_vector.tag_hex);
-                         free(*vectors); // Uvolnime hlavne pole
-                         fclose(fp);
-                         return 0;
-                     }
-                     *vectors = temp;
-                 }
-                 (*vectors)[count] = current_vector; // Ulozime kompletny vektor
-                 count++;
-                 memset(&current_vector, 0, sizeof(EAX_Test_Vector)); // Reset pre dalsi vektor
-                 vector_complete = 0;
-            }
-            continue; // Preskocime na dalsi riadok
+        char *trimmed = trim(line);
+        if (!trimmed || strlen(trimmed) == 0 || trimmed[0] == '#') {
+            if (in_test_case) start_pos = ftell(fp);
+            continue;
         }
 
-        char *key = NULL, *value = NULL;
-        key = strtok(trimmed_line, ":"); // Rozdelenie podla dvojbodky
-        if (key) value = strtok(NULL, ""); // Zvysok riadku ako hodnota
-        if (key && value) {
-            char* trimmed_key = trim(key);
-            char* trimmed_value = trim(value);
+        LineType type = get_line_type(trimmed);
+        value = NULL;
 
-            // Bezpecnejsie priradenie pomocou my_strdup
-            if (strcmp(trimmed_key, "MSG") == 0) { free(current_vector.pt_hex); current_vector.pt_hex = my_strdup(trimmed_value); }
-            else if (strcmp(trimmed_key, "KEY") == 0) { free(current_vector.key_hex); current_vector.key_hex = my_strdup(trimmed_value); }
-            else if (strcmp(trimmed_key, "NONCE") == 0) { free(current_vector.nonce_hex); current_vector.nonce_hex = my_strdup(trimmed_value); }
-            else if (strcmp(trimmed_key, "HEADER") == 0) { free(current_vector.header_hex); current_vector.header_hex = my_strdup(trimmed_value); }
-            else if (strcmp(trimmed_key, "CIPHER") == 0) {
-                size_t cipher_len_hex = strlen(trimmed_value);
-                size_t tag_len_hex = 16 * 2; // Standardny EAX tag je 16 bajtov (32 hex znakov)
-
-                if (cipher_len_hex >= tag_len_hex) {
-                    size_t ct_len_hex = cipher_len_hex - tag_len_hex;
-
-                    // Uvolnenie predchadzajucich alokacii
-                    free(current_vector.ct_hex);
-                    free(current_vector.tag_hex);
-                    current_vector.ct_hex = NULL;
-                    current_vector.tag_hex = NULL;
-
-                    // Alokacia a kopirovanie ciphertext casti
-                    if (ct_len_hex > 0) {
-                        current_vector.ct_hex = malloc(ct_len_hex + 1);
-                        if (current_vector.ct_hex) {
-                            strncpy(current_vector.ct_hex, trimmed_value, ct_len_hex);
-                            current_vector.ct_hex[ct_len_hex] = '\0';
-                        } else { printf("Chyba alokacie pamate pre ciphertext\n"); /* Mozna dalsia obsluha */ }
-                    }
-
-                    // Alokacia a kopirovanie tag casti
-                    current_vector.tag_hex = malloc(tag_len_hex + 1);
-                     if (current_vector.tag_hex) {
-                        strncpy(current_vector.tag_hex, trimmed_value + ct_len_hex, tag_len_hex);
-                        current_vector.tag_hex[tag_len_hex] = '\0';
-                    } else { printf("Chyba alokacie pamate pre tag\n"); /* Mozna dalsia obsluha */ }
-
-                    vector_complete = 1; // Oznacime vektor ako potencialne kompletny
-                } else {
-                    // Chyba: CIPHER riadok je prilis kratky
-                    printf("Varovanie: CIPHER riadok prilis kratky vo vektore %d\n", count + 1);
-                    free(current_vector.ct_hex);
-                    free(current_vector.tag_hex);
-                    current_vector.ct_hex = NULL;
-                    current_vector.tag_hex = NULL;
-                    vector_complete = 1; // Oznacime ako kompletny pre spracovanie (neplatneho) vektora
+        switch(type) {
+            case COUNT:
+                value = get_line_value(trimmed, "Count = ");
+                if (in_test_case) {
+                    fseek(fp, start_pos, SEEK_SET);
+                    free(value);
+                    data->should_fail = fail_tag_seen;
+                    return true;
                 }
-            }
+                data->count = atoi(value);
+                in_test_case = true;
+                fail_tag_seen = false;
+                free(value);
+                break;
+
+            case KEY:
+                value = get_line_value(trimmed, "KEY:");
+                if (!data->key_hex) data->key_hex = value; else free(value);
+                break;
+
+            case NONCE:
+                value = get_line_value(trimmed, "NONCE:");
+                if (!data->nonce_hex) data->nonce_hex = value; else free(value);
+                break;
+
+            case HEADER:
+                value = get_line_value(trimmed, "HEADER:");
+                if (!data->header_hex) data->header_hex = value; else free(value);
+                break;
+
+            case MSG:
+                value = get_line_value(trimmed, "MSG:");
+                if (!data->pt_hex) data->pt_hex = value; else free(value);
+                break;
+
+            case CIPHER:
+                value = get_line_value(trimmed, "CIPHER:");
+                if (value && strlen(value) >= 32) { // Predpokladáme 16B tag (32 znakov hex)
+                    size_t len = strlen(value);
+                    size_t tag_len_hex = 32; // Tag je typicky 16 bajtov (32 hex znakov)
+                    
+                    // CT je všetko okrem posledných tag_len_hex znakov
+                    size_t ct_len_hex = len - tag_len_hex;
+                    
+                    // Rozdelenie na CT a tag
+                    data->ct_hex = malloc(ct_len_hex + 1);
+                    data->tag_hex = malloc(tag_len_hex + 1);
+                    
+                    if (data->ct_hex && data->tag_hex) {
+                        if (ct_len_hex > 0) {
+                            strncpy(data->ct_hex, value, ct_len_hex);
+                            data->ct_hex[ct_len_hex] = '\0';
+                        } else {
+                            data->ct_hex[0] = '\0'; // Prázdny CT
+                        }
+                        
+                        strncpy(data->tag_hex, value + ct_len_hex, tag_len_hex);
+                        data->tag_hex[tag_len_hex] = '\0';
+                    } else {
+                        free(data->ct_hex);
+                        free(data->tag_hex);
+                        data->ct_hex = NULL;
+                        data->tag_hex = NULL;
+                    }
+                }
+                free(value);
+                break;
+
+            case FAIL:
+                fail_tag_seen = true;
+                break;
         }
+        start_pos = ftell(fp);
     }
 
-    // Ulozenie posledneho vektora, ak bol kompletny a subor nekoncil prazdnym riadkom
-    if (vector_complete) {
-         if (capacity <= count) {
-             capacity++;
-             EAX_Test_Vector *temp = realloc(*vectors, sizeof(EAX_Test_Vector) * capacity);
-             if (!temp) {
-                 printf("Chyba realokacie pamate pre posledny vektor\n");
-                 // Uvolnime ciastocne alokovane data
-                 free(current_vector.key_hex);
-                 free(current_vector.nonce_hex);
-                 free(current_vector.header_hex);
-                 free(current_vector.pt_hex);
-                 free(current_vector.ct_hex);
-                 free(current_vector.tag_hex);
-                 free(*vectors);
-                 fclose(fp);
-                 return 0;
-             }
-             *vectors = temp;
-         }
-        (*vectors)[count] = current_vector;
-        count++;
-    } else if (current_vector.key_hex || current_vector.nonce_hex || current_vector.pt_hex || current_vector.header_hex || current_vector.ct_hex || current_vector.tag_hex) {
-         // Uvolnenie dat pre posledny nekompletny vektor
-         free(current_vector.key_hex);
-         free(current_vector.nonce_hex);
-         free(current_vector.header_hex);
-         free(current_vector.pt_hex);
-         free(current_vector.ct_hex);
-         free(current_vector.tag_hex);
+    if (in_test_case) {
+        data->should_fail = fail_tag_seen;
+        return true;
     }
-
-    *vector_count = count;
-    fclose(fp);
-    return 1;
+    
+    return false;
 }
 
-// Uvolnenie pamate alokovanej pre testovacie vektory
-void freeTestVectors(EAX_Test_Vector *vectors, int count) {
-    if (!vectors) return;
-    for (int i = 0; i < count; i++) {
-        free(vectors[i].key_hex);
-        free(vectors[i].nonce_hex);
-        free(vectors[i].header_hex);
-        free(vectors[i].pt_hex);
-        free(vectors[i].ct_hex);
-        free(vectors[i].tag_hex);
-    }
-    free(vectors);
-}
-
-// --- Vykonanie EAX testu ---
-
-int runEaxTest(const EAX_Test_Vector *vector, int key_size_bytes) {
-    int overall_success = 1; // Celkovy uspech testu (sifrovanie aj desifrovanie)
-
-    // Vypocet dlzok dat v bajtoch
-    size_t key_len = vector->key_hex ? strlen(vector->key_hex) / 2 : 0;
-    size_t nonce_len = vector->nonce_hex ? strlen(vector->nonce_hex) / 2 : 0;
-    size_t header_len = vector->header_hex ? strlen(vector->header_hex) / 2 : 0;
-    size_t pt_len = vector->pt_hex ? strlen(vector->pt_hex) / 2 : 0;
-    size_t ct_len = vector->ct_hex ? strlen(vector->ct_hex) / 2 : 0;
-    size_t tag_len = vector->tag_hex ? strlen(vector->tag_hex) / 2 : 0;
-
-    // Kontrola platnosti vstupnych dat
-    if (key_len != (size_t)key_size_bytes) {
-        printf("Chyba: Nespravna dlzka kluca (%zu != %d)\n", key_len, key_size_bytes);
-        return 0;
-    }
-    if (tag_len == 0 || tag_len > 16) {
-        printf("Chyba: Neplatna alebo chybajuca dlzka tagu (%zu)\n", tag_len);
-        return 0; // EAX tag je typicky do 16 bajtov
-    }
-    if (pt_len != ct_len) {
-        printf("Varovanie: Dlzka plaintextu (%zu) sa nezhoduje s dlzkou ciphertextu (%zu) v testovacom vektore.\n", pt_len, ct_len);
-        // V EAX by mali byt rovnake, ale pokracujeme v teste
+bool process_test_case(const TestCaseData *data, int *passed_encrypt, int *passed_decrypt) {
+    if (!data->key_hex || !data->nonce_hex || !data->tag_hex) {
+        printf("Nekompletne testovacie data\n");
+        return false;
     }
 
-    // Alokacia pamate pre binarne data
-    // Pouzivame calloc pre inicializaciu na nulu, co je bezpecnejsie
-    uint8_t *key = calloc(key_len, 1);
-    uint8_t *nonce = calloc(nonce_len > 0 ? nonce_len : 1, 1); // Minimalne 1 bajt
-    uint8_t *header = calloc(header_len > 0 ? header_len : 1, 1);
-    uint8_t *pt = calloc(pt_len > 0 ? pt_len : 1, 1);
-    uint8_t *expected_ct = calloc(ct_len > 0 ? ct_len : 1, 1);
-    uint8_t *expected_tag = calloc(tag_len, 1);
+    size_t lens[] = {
+        strlen(data->key_hex) / 2,
+        strlen(data->nonce_hex) / 2,
+        data->header_hex ? strlen(data->header_hex) / 2 : 0,
+        data->pt_hex ? strlen(data->pt_hex) / 2 : 0,
+        data->ct_hex ? strlen(data->ct_hex) / 2 : 0,
+        strlen(data->tag_hex) / 2
+    };
 
-    uint8_t *result_ct = calloc(pt_len > 0 ? pt_len : 1, 1); // CT dlzka == PT dlzka
-    uint8_t *result_tag = calloc(tag_len, 1);
-    uint8_t *result_pt = calloc(ct_len > 0 ? ct_len : 1, 1); // PT dlzka == CT dlzka
-    uint8_t *combined_ct_tag = calloc((ct_len > 0 ? ct_len : 0) + tag_len, 1);
+    uint8_t *bufs[] = {
+        calloc(lens[0] + 1, 1),  // key
+        calloc(lens[1] + 1, 1),  // nonce
+        calloc(lens[2] + 1, 1),  // header
+        calloc(lens[3] + 1, 1),  // plaintext
+        calloc(lens[4] + 1, 1),  // ciphertext
+        calloc(lens[5] + 1, 1)   // tag
+    };
 
-    // Kontrola uspesnosti alokacie
-    if (!key || !nonce || !header || !pt || !expected_ct || !expected_tag || !result_ct || !result_tag || !result_pt || !combined_ct_tag) {
-        printf("Chyba: Alokacia pamate zlyhala\n");
-        // Uvolnenie uz alokovanej pamate
-        free(key); free(nonce); free(header); free(pt); free(expected_ct);
-        free(expected_tag); free(result_ct); free(result_tag); free(result_pt);
-        free(combined_ct_tag);
-        return 0;
+    for (int i = 0; i < 6; i++) {
+        if (!bufs[i]) goto cleanup;
     }
 
-    // Konverzia hex retazcov na binarne data
-    hex_to_bin(vector->key_hex, key, key_len);
-    if (nonce_len > 0) hex_to_bin(vector->nonce_hex, nonce, nonce_len);
-    if (header_len > 0) hex_to_bin(vector->header_hex, header, header_len);
-    if (pt_len > 0) hex_to_bin(vector->pt_hex, pt, pt_len);
-    if (ct_len > 0) hex_to_bin(vector->ct_hex, expected_ct, ct_len);
-    hex_to_bin(vector->tag_hex, expected_tag, tag_len);
+    const char *hexs[] = {
+        data->key_hex, data->nonce_hex, data->header_hex,
+        data->pt_hex, data->ct_hex, data->tag_hex
+    };
 
-    // --- Test Sifrovania ---
-    printf("--- Sifrovanie ---\n");
-    char temp_hex[256]; // Buffer pre vypis hex hodnot
-
-    bytesToHex(key, key_len, temp_hex);
-    printf("Kluc      : %s (%zu bajtov)\n", temp_hex, key_len);
-    bytesToHex(nonce, nonce_len, temp_hex);
-    printf("Nonce     : %s (%zu bajtov)\n", temp_hex, nonce_len);
-    bytesToHex(header, header_len, temp_hex);
-    printf("Hlavicka  : %s (%zu bajtov)\n", temp_hex, header_len);
-    bytesToHex(pt, pt_len, temp_hex);
-    printf("Plaintext : %s (%zu bajtov)\n", temp_hex, pt_len);
-    printf("\n");
-
-    // Volanie EAX sifrovania
-    AES_EAX_encrypt(key, nonce, pt, pt_len, header, header_len, result_ct, result_tag);
-
-    int encrypt_ct_ok = compareAndPrintHex("Ciphertext", expected_ct, result_ct, ct_len);
-    int encrypt_tag_ok = compareAndPrintHex("Tag", expected_tag, result_tag, tag_len);
-
-    if (!encrypt_ct_ok || !encrypt_tag_ok) {
-        overall_success = 0;
+    for (int i = 0; i < 6; i++) {
+        if (hexs[i] && lens[i] > 0 && hex_to_bin(hexs[i], bufs[i], lens[i]) != 0) goto cleanup;
     }
-    printf("Vysledok sifrovania: %s\n", (encrypt_ct_ok && encrypt_tag_ok) ? "USPESNE" : "NEUSPESNE");
 
+    printf("=== Test #%d ===\n", data->count);
+    printf("Vstupne data:\n");
+    printf("  Kluc: ");
+    print_limited(data->key_hex, 75);
+    printf("  Nonce: ");
+    print_limited(data->nonce_hex, 75);
+    
+    if (data->header_hex) {
+        printf("  Hlavicka: ");
+        print_limited(data->header_hex, 75);
+    }
 
-    // --- Test Desifrovania ---
-    printf("\n--- Desifrovanie ---\n");
-
-    bytesToHex(key, key_len, temp_hex);
-    printf("Kluc        : %s (%zu bajtov)\n", temp_hex, key_len);
-    bytesToHex(nonce, nonce_len, temp_hex);
-    printf("Nonce       : %s (%zu bajtov)\n", temp_hex, nonce_len);
-    bytesToHex(header, header_len, temp_hex);
-    printf("Hlavicka    : %s (%zu bajtov)\n", temp_hex, header_len);
-    bytesToHex(expected_ct, ct_len, temp_hex);
-    printf("Ciphertext  : %s (%zu bajtov)\n", temp_hex, ct_len);
-    bytesToHex(expected_tag, tag_len, temp_hex);
-    printf("Tag         : %s (%zu bajtov)\n", temp_hex, tag_len);
-    printf("\n");
-
-    // Spojenie ocakavaneho CT a Tagu pre vstup desifrovania
-    if (ct_len > 0) memcpy(combined_ct_tag, expected_ct, ct_len);
-    memcpy(combined_ct_tag + ct_len, expected_tag, tag_len);
-
-    // Volanie EAX desifrovania
-    int decrypt_status = AES_EAX_decrypt(key, nonce, combined_ct_tag, ct_len, header, header_len, tag_len, result_pt);
-
-    printf("Status desifrovania: %s\n", decrypt_status == 0 ? "USPECH (Tag platny)" : "ZLYHANIE (Tag neplatny)");
-
-    if (decrypt_status == 0) { // Uspesne desifrovanie
-        int decrypt_pt_ok = compareAndPrintHex("Plaintext", pt, result_pt, pt_len);
-        if (!decrypt_pt_ok) {
-            overall_success = 0;
+    // Vykonáme test šifrovania aj dešifrovania
+    // 1. Test šifrovania
+    printf("\nTest sifrovania:\n");
+    if (data->pt_hex) {
+        printf("  Plaintext: ");
+        print_limited(data->pt_hex, 75);
+        
+        uint8_t *result_ct = calloc(lens[3] + 1, 1);
+        uint8_t *result_tag = calloc(lens[5] + 1, 1);
+        
+        if (!result_ct || !result_tag) {
+            free(result_ct);
+            free(result_tag);
+            goto cleanup;
         }
-        printf("Vysledok desifrovania: %s\n", decrypt_pt_ok ? "USPESNE" : "NEUSPESNE");
+        
+        AES_EAX_encrypt(bufs[0], bufs[1], bufs[3], lens[3], bufs[2], lens[2], result_ct, result_tag);
+        
+        printf("  Vypocitany ciphertext: ");
+        print_hex(result_ct, lens[3]);
+        if (data->ct_hex) {
+            printf("  Ocakavany ciphertext: ");
+            print_hex(bufs[4], lens[4]);
+        }
+        
+        printf("  Vypocitany tag: ");
+        print_hex(result_tag, lens[5]);
+        printf("  Ocakavany tag: ");
+        print_hex(bufs[5], lens[5]);
+        
+        bool tag_match = (memcmp(result_tag, bufs[5], lens[5]) == 0);
+        bool ct_match = (!data->ct_hex || memcmp(result_ct, bufs[4], lens[4]) == 0);
+        bool ok = tag_match && ct_match;
+        
+        if (ok) (*passed_encrypt)++;
+        printf("  Vysledok sifrovania: %s\n\n", ok ? "USPESNY" : "NEUSPESNY");
+        
+        free(result_ct);
+        free(result_tag);
     } else {
-        // Ak desifrovanie zlyhalo (neplatny tag), test je neuspesny
-        printf("Vysledok desifrovania: NEUSPESNE (chyba autentifikacie)\n");
-        overall_success = 0;
+        printf("  (Ziadny plaintext na zasifrovanie)\n\n");
+    }
+    
+    // 2. Test dešifrovania
+    printf("Test desifrovania:\n");
+    if (data->ct_hex) {
+        printf("  Ciphertext: ");
+        print_limited(data->ct_hex, 75);
+        printf("  Tag: ");
+        print_limited(data->tag_hex, 75);
+        
+        uint8_t *combined_ct_tag = calloc(lens[4] + lens[5], 1);
+        uint8_t *decrypted = calloc(lens[4] + 1, 1);
+        
+        if (!combined_ct_tag || !decrypted) {
+            free(combined_ct_tag);
+            free(decrypted);
+            goto cleanup;
+        }
+        
+        memcpy(combined_ct_tag, bufs[4], lens[4]);
+        memcpy(combined_ct_tag + lens[4], bufs[5], lens[5]);
+        
+        int decrypt_status = AES_EAX_decrypt(
+            bufs[0], bufs[1], combined_ct_tag, 
+            lens[4], bufs[2], lens[2], lens[5], decrypted
+        );
+        
+        printf("  Status desifrovania: %s\n", 
+               decrypt_status == 0 ? "USPECH (Tag platny)" : "ZLYHANIE (Tag neplatny)");
+        printf("  Ocakavany status: %s\n", 
+               data->should_fail ? "ZLYHANIE (Tag neplatny)" : "USPECH (Tag platny)");
+        
+        if (decrypt_status == 0 && data->pt_hex) {
+            printf("  Vypocitany plaintext: ");
+            print_hex(decrypted, lens[3]);
+            printf("  Ocakavany plaintext: ");
+            print_hex(bufs[3], lens[3]);
+        }
+        
+        bool ok = data->should_fail ? 
+                 (decrypt_status != 0) :
+                 (decrypt_status == 0 && 
+                  (!data->pt_hex || memcmp(decrypted, bufs[3], lens[3]) == 0));
+        
+        if (ok) (*passed_decrypt)++;
+        printf("  Vysledok desifrovania: %s\n\n", ok ? "USPESNY" : "NEUSPESNY");
+        
+        free(combined_ct_tag);
+        free(decrypted);
+    } else {
+        printf("  (Ziadny ciphertext na desifrovanie)\n\n");
     }
 
-    // Uvolnenie pamate
-    free(key);
-    free(nonce);
-    free(header);
-    free(pt);
-    free(expected_ct);
-    free(expected_tag);
-    free(result_ct);
-    free(result_tag);
-    free(result_pt);
-    free(combined_ct_tag);
-
-    printf("\nVysledok testu: %s\n", overall_success ? "USPESNY" : "NEUSPESNY");
-    return overall_success;
+cleanup:
+    for (int i = 0; i < 6; i++) {
+        free(bufs[i]);
+    }
+    return true;
 }
 
-// --- Hlavna funkcia ---
+int main() {
+    // Zistenie, ci sa jedna o 128, 192 alebo 256 bitovy rezim podla definicie v micro_aes.h
+    const char* test_vectors_file = "test_vectors/eax_128.txt";
+    printf("AES-128 EAX Test\n");
+    
+    printf("Pouziva sa testovaci subor: %s\n", test_vectors_file);
 
-int main(int argc, char* argv[]) {
-    // Zistenie velkosti kluca z kompilacnych definicii
-    #if AES___ == 256
-        const int aes_bits = 256;
-        const char* default_test_file = "test_vectors/eax_256.txt";
-        printf("AES-EAX Demo (AES-256)\n");
-    #elif AES___ == 192
-        const int aes_bits = 192;
-        const char* default_test_file = "test_vectors/eax_192.txt";
-        printf("AES-EAX Demo (AES-192)\n");
-    #else // Predvolene AES-128
-        const int aes_bits = 128;
-        const char* default_test_file = "test_vectors/eax_128.txt";
-        printf("AES-EAX Demo (AES-128)\n");
-    #endif
-
-    const char* test_vectors_file = (argc > 1) ? argv[1] : default_test_file;
-    int key_size_bytes = aes_bits / 8;
-
-    printf("Pouziva sa subor s testovacimi vektormi: %s\n", test_vectors_file);
-
-    EAX_Test_Vector *vectors = NULL;
-    int vector_count = 0;
-    int passed_count = 0;
-
-    if (!loadTestVectors(test_vectors_file, &vectors, &vector_count)) {
-        printf("Nepodarilo sa nacitat testovacie vektory.\n");
+    FILE *fp = fopen(test_vectors_file, "r");
+    if (!fp) {
+        perror("Nepodarilo sa otvorit subor s testovacimi vektormi");
         return 1;
     }
 
-    printf("Nacitanych %d testovacich vektorov.\n", vector_count);
+    int tests_passed_encrypt = 0;
+    int tests_passed_decrypt = 0;
+    TestCaseData current_test = {0};
+    int processed_tests = 0;
 
-    for (int i = 0; i < vector_count; i++) {
-        printf("\n==================== Testovaci Vektor %d ====================\n", i + 1);
-        if (runEaxTest(&vectors[i], key_size_bytes)) {
-            passed_count++;
-        }
-        printf("===========================================================\n");
+    while (parse_next_test_case(fp, &current_test)) {
+        processed_tests++;
+        process_test_case(&current_test, &tests_passed_encrypt, &tests_passed_decrypt);
+        free_test_case_data(&current_test);
     }
 
-    printf("\nTestovanie dokoncene: %d/%d testov uspesnych.\n", passed_count, vector_count);
+    fclose(fp);
 
-    freeTestVectors(vectors, vector_count);
+    int total_passed = tests_passed_encrypt + tests_passed_decrypt;
+    bool success = (processed_tests > 0 && tests_passed_encrypt + tests_passed_decrypt == processed_tests * 2);
 
-    return (passed_count == vector_count) ? 0 : 1; // Navratova hodnota 0 pri uspechu
+    printf("\nCelkove vysledky:\n");
+    printf("Spracovanych testov: %d\n", processed_tests);
+    printf("Uspesnych testov sifrovania: %d\n", tests_passed_encrypt);
+    printf("Uspesnych testov desifrovania: %d\n", tests_passed_decrypt);
+    printf("Celkovy vysledok: %s\n", success ? "USPESNY" : "NEUSPESNY");
+
+    return success ? 0 : 1;
 }
