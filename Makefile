@@ -12,14 +12,14 @@ AES_LIB_HDR = libs/micro_aes.h
 FPE_LIB_HDR = libs/micro_fpe.h
 # Common utilities
 COMMON_SRC = common.c
-COMMON_HDR = common.h
+COMMON_HDR = header_files/common.h
 COMMON_OBJ = $(COMMON_SRC:.c=.o)
 # Demo source files (base names)
 # List all base names for demos that exist
 # Note: gcm1024 is not a base, it's a variant built from gcm_demo.c
 DEMO_BASES = ecb cbc cfb ofb ctr xts gcm ccm kw eax ocb siv gcm_siv fpe
 DEMO_SRCS = $(patsubst %,%_demo.c,$(DEMO_BASES))
-DEMO_SRCS := $(filter-out $(COMMON_SRC), $(DEMO_SRCS)) # Ensure common.c is excluded
+DEMO_SRCS := $(filter-out $(COMMON_SRC), $(DEMO_SRCS))
 
 # --- Executable Definitions ---
 AES_SIZES = 128 192 256
