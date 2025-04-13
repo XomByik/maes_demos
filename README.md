@@ -24,7 +24,7 @@ Tento projekt obsahuje demonštračné implementácie rôznych režimov šifrova
 
 ### Spracovanie testovacích vektorov
 
-1. **Jednotný formát parsovania**
+1. **Jednotný formát načítania vektorov zo súboru**
    - Automatické rozpoznávanie formátov testovacích vektorov
    - Podpora rôznych formátov špecifických pre konkrétne režimy
    - Flexibilné rozpoznávanie kľúčových častí vektorov
