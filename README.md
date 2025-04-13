@@ -1,4 +1,4 @@
-# Micro AES Demos: Implementácia a testovanie AES módov
+# Micro AES Demos: Demonštrácia funkčnosti režimov z knižnice micro-aes pomocou oficiálnych testovacích vektorov
 
 ## Obsah
 1. [Základný prehľad](#základný-prehľad)
