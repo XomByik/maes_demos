@@ -251,31 +251,7 @@ Jednotlivé režimy sú vhodné pre rôzne aplikácie:
 - **CTR**: Potrebuje unikátne počítadlo pre každú správu
 - **GCM/CCM**: Nonce musí byť unikátny pre každý kľúč
 - **SIV/GCM-SIV**: Bezpečné aj pri opakovaní nonce, ale ideálne použiť unikátny
-- **XTS**: Odporúča sa 256-bitový kľúč (rozdiel od štandardu AES)
-
-## Podporované režimy
-
-Nasledujúca tabuľka zhŕňa podporované režimy AES spolu s relevantnými štandardmi a publikáciami:
-
-| Režim    | 128-bit | 192-bit | 256-bit | Autentifikácia | Štandard/Publikácia |
-|----------|:-------:|:-------:|:-------:|:--------------:|----------------------|
-| ECB      | ✓       | ✓       | ✓       | ✗              | FIPS 197 (2001)<br>[doi:10.6028/NIST.FIPS.197](https://doi.org/10.6028/NIST.FIPS.197) |
-| CBC      | ✓       | ✓       | ✓       | ✗              | NIST SP 800-38A (2001)<br>[doi:10.6028/NIST.SP.800-38A](https://doi.org/10.6028/NIST.SP.800-38A) |
-| CTR      | ✓       | ✓       | ✓       | ✗              | NIST SP 800-38A (2001)<br>[doi:10.6028/NIST.SP.800-38A](https://doi.org/10.6028/NIST.SP.800-38A) |
-| CFB      | ✓       | ✓       | ✓       | ✗              | NIST SP 800-38A (2001)<br>[doi:10.6028/NIST.SP.800-38A](https://doi.org/10.6028/NIST.SP.800-38A) |
-| OFB      | ✓       | ✓       | ✓       | ✗              | NIST SP 800-38A (2001)<br>[doi:10.6028/NIST.SP.800-38A](https://doi.org/10.6028/NIST.SP.800-38A) |
-| XTS      | ✓       | ✗       | ✓       | ✗              | IEEE Std 1619-2007<br>[doi:10.1109/IEEESTD.2008.4493450](https://doi.org/10.1109/IEEESTD.2008.4493450)<br>NIST SP 800-38E (2010)<br>[doi:10.6028/NIST.SP.800-38E](https://doi.org/10.6028/NIST.SP.800-38E) |
-| GCM      | ✓       | ✓       | ✓       | ✓              | NIST SP 800-38D (2007)<br>[doi:10.6028/NIST.SP.800-38D](https://doi.org/10.6028/NIST.SP.800-38D) |
-| CCM      | ✓       | ✓       | ✓       | ✓              | NIST SP 800-38C (2004)<br>[doi:10.6028/NIST.SP.800-38C](https://doi.org/10.6028/NIST.SP.800-38C)<br>RFC 3610 (2003) |
-| GCM-SIV  | ✓       | ✗       | ✓       | ✓              | RFC 8452 (2019)<br>"AES-GCM-SIV: Nonce Misuse-Resistant Authenticated Encryption"<br>[doi:10.17487/RFC8452](https://doi.org/10.17487/RFC8452) |
-| SIV      | ✓       | ✗       | ✓       | ✓              | RFC 5297 (2008)<br>"Synthetic Initialization Vector (SIV) Authenticated Encryption"<br>[doi:10.17487/RFC5297](https://doi.org/10.17487/RFC5297) |
-| OCB      | ✓       | ✓       | ✓       | ✓              | RFC 7253 (2014)<br>"The OCB Authenticated-Encryption Algorithm"<br>[doi:10.17487/RFC7253](https://doi.org/10.17487/RFC7253) |
-| EAX      | ✓       | ✓       | ✓       | ✓              | Bellare, M., Rogaway, P., Wagner, D. (2004)<br>"The EAX Mode of Operation"<br>[doi:10.1007/978-3-540-25937-4_27](https://doi.org/10.1007/978-3-540-25937-4_27) |
-| KW       | ✓       | ✓       | ✓       | ✓              | NIST SP 800-38F (2012)<br>[doi:10.6028/NIST.SP.800-38F](https://doi.org/10.6028/NIST.SP.800-38F)<br>RFC 3394 (2002) |
-| FPE-FF1  | ✓       | ✓       | ✓       | ✗              | NIST SP 800-38G (2016)<br>[doi:10.6028/NIST.SP.800-38G](https://doi.org/10.6028/NIST.SP.800-38G) |
-| FPE-FF3-1| ✓       | ✓       | ✓       | ✗              | NIST SP 800-38G Rev. 1 (2019)<br>[doi:10.6028/NIST.SP.800-38G-rev1-draft](https://csrc.nist.gov/publications/detail/sp/800-38g/rev-1/draft) |
-
-### Bezpečnostné odporúčania
+- **XTS**: Odporúča sa používať 256-bitový kľúč
 
 ## Podporované režimy a testovacie vektory
 
