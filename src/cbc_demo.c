@@ -1,4 +1,4 @@
-#include "../header_files/cbc_config.h"
+#include "../header_files/cbc.h"
 
 static LineType get_line_type(const char *line) {
   if (strncmp(line, "Key", 3) == 0)

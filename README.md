@@ -71,7 +71,7 @@ maes_demos/
 │   ├── micro_aes.c       # Hlavná implementácia AES
 │   ├── micro_fpe.h       # Implementácia FPE režimu
 │   └── ...
-├── header_files/         # Konfiguračné hlavičky pre režimy 
+├── header_files/         # Hlavičkové súbory pre každý režim 
 │   ├── cbc_config.h
 │   ├── gcm_config.h
 │   └── ...
@@ -92,7 +92,7 @@ maes_demos/
    - Vektory sú analyzované a rozdelené na relevantné časti (kľúč, IV, vstupné dáta, očakávané výstupy)
    
 2. **Spustenie šifrovacieho algoritmu**:
-   - Pomocou implementácie algoritmu v `micro_aes.c`
+   - Využívame knižničnú implementáciu pre daný režim z `micro_aes.c`
    - Volanie príslušných funkcií pre šifrovanie a dešifrovanie
    
 3. **Porovnanie výsledkov**:
@@ -223,35 +223,6 @@ Test desifrovania:
 - FF1 a FF3-1 algoritmy
 - Zachováva formát plaintextu (napr. čísla zostanú číslami)
 - Použitie: `FF1_encrypt` / `FF3_encrypt`
-
-## Bezpečnostné informácie
-
-### Režimy a ich použitie
-
-Jednotlivé režimy sú vhodné pre rôzne aplikácie:
-
-| Režim | Autentifikácia | Paralelizovateľný | Vhodné použitie |
-|-------|----------------|-------------------|-----------------|
-| ECB   | Nie            | Áno               | **NEODPORÚČA SA** pre priame použitie |
-| CBC   | Nie            | Nie               | Šifrovanie dát, ktoré sa nezmenia |
-| CTR   | Nie            | Áno               | Šifrovanie prúdov dát, video |
-| XTS   | Nie            | Áno               | Šifrovanie diskov |
-| GCM   | Áno            | Áno               | TLS, IPsec, všeobecné účely |
-| CCM   | Áno            | Nie               | Bezdrôtové siete (802.11) |
-| SIV   | Áno            | Čiastočne         | Dáta pri riziku opakovaného nonce |
-| OCB   | Áno            | Áno               | Vysokovýkonné šifrovanie |
-| EAX   | Áno            | Nie               | Obmedzené zariadenia |
-| KW    | Áno            | Nie               | Prenos kľúčov |
-| FPE   | Nie            | Nie               | Šifrovanie so zachovaním formátu |
-
-### Bezpečnostné odporúčania
-
-- **ECB**: Nepoužívajte pre skutočné aplikácie
-- **CBC**: Potrebuje nepredvídateľný IV pre každú správu
-- **CTR**: Potrebuje unikátne počítadlo pre každú správu
-- **GCM/CCM**: Nonce musí byť unikátny pre každý kľúč
-- **SIV/GCM-SIV**: Bezpečné aj pri opakovaní nonce, ale ideálne použiť unikátny
-- **XTS**: Odporúča sa používať 256-bitový kľúč
 
 ## Podporované režimy a testovacie vektory
 

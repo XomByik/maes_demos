@@ -1,4 +1,4 @@
-#include "../header_files/ofb_config.h"
+#include "../header_files/ofb.h"
 
 typedef enum {
   KEY,

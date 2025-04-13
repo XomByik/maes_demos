@@ -1,4 +1,4 @@
-#include "../header_files/fpe_config.h"
+#include "../header_files/fpe.h"
 
 typedef enum {
   COUNT,

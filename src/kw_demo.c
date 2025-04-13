@@ -1,4 +1,4 @@
-#include "../header_files/kw_config.h"
+#include "../header_files/kw.h"
 
 typedef enum {
   KEY,

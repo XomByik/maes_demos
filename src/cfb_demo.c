@@ -1,4 +1,4 @@
-#include "../header_files/cfb_config.h"
+#include "../header_files/cfb.h"
 
 static int get_segment_size(const char *filename) {
   if (strstr(filename, "cfb1_") != NULL)

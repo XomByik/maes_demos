@@ -1,4 +1,4 @@
-#include "../header_files/eax_config.h"
+#include "../header_files/eax.h"
 
 typedef enum { KEY, NONCE, HEADER, MSG, CIPHER, COUNT, FAIL } LineType;
 

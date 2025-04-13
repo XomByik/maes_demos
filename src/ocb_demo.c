@@ -1,4 +1,4 @@
-#include "../header_files/ocb_config.h"
+#include "../header_files/ocb.h"
 
 typedef enum { KEY, NONCE, AAD, PT, CT, COUNT, FAIL } LineType;
 

@@ -1,4 +1,4 @@
-#include "../header_files/ccm_config.h"
+#include "../header_files/ccm.h"
 
 static char *get_value_after_prefix(const char *line, const char *prefix) {
   size_t prefix_len = strlen(prefix);

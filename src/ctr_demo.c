@@ -1,4 +1,4 @@
-#include "../header_files/ctr_config.h"
+#include "../header_files/ctr.h"
 
 static LineType get_line_type(const char *line) {
   if (strncmp(line, "Key", 3) == 0)

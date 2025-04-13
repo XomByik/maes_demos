@@ -1,4 +1,4 @@
-#include "../header_files/siv_config.h"
+#include "../header_files/siv.h"
 
 typedef enum {
   KEY_T,

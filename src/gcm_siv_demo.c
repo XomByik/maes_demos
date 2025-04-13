@@ -1,4 +1,4 @@
-#include "../header_files/gcm_siv_config.h"
+#include "../header_files/gcm_siv.h"
 
 typedef enum { KEY, NONCE, AAD, PT, CT, COUNT } LineType;
 

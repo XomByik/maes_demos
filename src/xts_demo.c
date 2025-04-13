@@ -1,4 +1,4 @@
-#include "../header_files/xts_config.h"
+#include "../header_files/xts.h"
 
 typedef enum {
   KEY1_T,

@@ -1,4 +1,4 @@
-#include "../header_files/ecb_config.h"
+#include "../header_files/ecb.h"
 
 typedef enum {
   KEY,
