@@ -257,7 +257,7 @@ Jednotlivé režimy sú vhodné pre rôzne aplikácie:
 
 Nasledujúca tabuľka zhŕňa podporované režimy AES spolu s relevantnými štandardmi, publikáciami a testovacími vektormi dostupnými v projekte:
 
-| Režim    | 128-bit | 192-bit | 256-bit | Autentifikácia | Štandard/Publikácia | Testovacie vektory |
+| Režim    | 128-bit | 192-bit | 256-bit | Autentifikácia | Štandard/Zdroj testovacích vektorov | Testovacie vektory |
 |----------|:-------:|:-------:|:-------:|:--------------:|----------------------|-------------------|
 | ECB      | ✓       | ✓       | ✓       | ✗              | NIST SP 800-38A (2001)<br>[doi:10.6028/NIST.SP.800-38A](https://doi.org/10.6028/NIST.SP.800-38A) | `/test_vectors/ecb_128.txt`<br>`/test_vectors/ecb_192.txt`<br>`/test_vectors/ecb_256.txt` |
 | CBC      | ✓       | ✓       | ✓       | ✗              | NIST SP 800-38A (2001)<br>[doi:10.6028/NIST.SP.800-38A](https://doi.org/10.6028/NIST.SP.800-38A) | `/test_vectors/cbc_128.txt`<br>`/test_vectors/cbc_192.txt`<br>`/test_vectors/cbc_256.txt` |
