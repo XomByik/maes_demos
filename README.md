@@ -1,0 +1,300 @@
+# Micro AES Demos: Implementácia a testovanie AES módov
+
+## Obsah
+1. [Základný prehľad](#základný-prehľad)
+2. [Inštalácia](#inštalácia)
+3. [Ako to funguje](#ako-to-funguje)
+4. [Používanie programu](#používanie-programu)
+5. [Technická dokumentácia](#technická-dokumentácia)
+6. [Bezpečnostné informácie](#bezpečnostné-informácie)
+7. [Podporované režimy](#podporované-režimy)
+
+## Základný prehľad
+
+Tento projekt obsahuje demonštračné implementácie rôznych režimov šifrovania AES. Je vhodný pre:
+- Testovanie správnej implementácie AES režimov
+- Overenie kompatibility s oficiálnymi testovacími vektormi
+- Vzdelávacie účely
+
+### Hlavné výhody
+- Podporuje širokú škálu AES režimov (ECB, CBC, CTR, XTS, GCM, SIV a ďalšie)
+- Podpora kľúčových veľkostí: 128, 192, a 256 bitov
+- Kompatibilita s oficiálnymi NIST a inými testovacími vektormi
+- Modulárna štruktúra umožňujúca jednoduché pridávanie ďalších režimov
+- Čistá implementácia v C
+
+### Spracovanie testovacích vektorov
+
+1. **Jednotný formát parsovania**
+   - Automatické rozpoznávanie formátov testovacích vektorov
+   - Podpora rôznych formátov špecifických pre konkrétne režimy
+   - Flexibilné rozpoznávanie kľúčových častí vektorov
+
+2. **Vizualizácia výsledkov**
+   - Prehľadný výpis vstupných parametrov
+   - Zobrazenie očakávaných a vypočítaných hodnôt
+   - Jasné vyhodnotenie úspešnosti testu
+
+## Inštalácia
+
+### Požiadavky
+- Kompilátor GCC/Clang
+- Make
+
+### Kompilácia
+
+1. Klonovanie repozitára:
+```bash
+git clone https://github.com/yourusername/maes_demos.git
+cd maes_demos
+```
+
+2. Kompilácia programu:
+```bash
+make
+```
+
+3. Kompilácia konkrétneho režimu (napríklad AES-GCM s 256-bitovým kľúčom):
+```bash
+make gcm_256
+```
+
+## Ako to funguje
+
+### Architektúra projektu
+
+Projekt je organizovaný do nasledujúcej štruktúry:
+
+```
+maes_demos/
+├── libs/
+│   ├── micro_aes.c       # Hlavná implementácia AES
+│   ├── micro_fpe.h       # Implementácia FPE režimu
+│   └── ...
+├── header_files/         # Konfiguračné hlavičky pre režimy 
+│   ├── cbc_config.h
+│   ├── gcm_config.h
+│   └── ...
+├── src/                  # Demonštračné programy pre každý režim
+│   ├── cbc_demo.c
+│   ├── gcm_demo.c
+│   └── ...
+└── test_vectors/         # Testovacie vektory pre jednotlivé režimy
+    ├── cbc_128.txt
+    ├── gcm_256.txt
+    └── ...
+```
+
+### Proces testovania
+
+1. **Načítanie testovacích vektorov**:
+   - Každý demonštračný program načíta testovacie vektory zo súboru
+   - Vektory sú analyzované a rozdelené na relevantné časti (kľúč, IV, vstupné dáta, očakávané výstupy)
+   
+2. **Spustenie šifrovacieho algoritmu**:
+   - Pomocou implementácie algoritmu v `micro_aes.c`
+   - Volanie príslušných funkcií pre šifrovanie a dešifrovanie
+   
+3. **Porovnanie výsledkov**:
+   - Porovnanie vypočítaných výsledkov s očakávanými výsledkami
+   - Vyhodnotenie a zobrazenie výsledkov testu
+
+## Používanie programu
+
+### Kompilácia konkrétneho režimu
+
+Pomocou Makefile môžete vytvoriť špecifickú verziu programu pre konkrétny režim a veľkosť kľúča:
+
+```bash
+# AES-ECB s 128-bitovým kľúčom
+make ecb_128
+
+# AES-CBC s 256-bitovým kľúčom
+make cbc_256
+
+# AES-GCM s 192-bitovým kľúčom
+make gcm_192
+```
+
+### Spustenie testovania
+
+```bash
+# Pre AES-XTS s 128-bitovým kľúčom
+./xts_128
+
+# Pre AES-GCM-SIV s 256-bitovým kľúčom
+./gcm_siv_256
+
+# Pre AES-FPE-FF3 s 128-bitovým kľúčom
+./ff3_128
+```
+
+### Príklad výstupu
+
+```
+AES-256 GCM Test
+Pouziva sa testovaci subor: test_vectors/gcm_256.txt
+=== Test #0 ===
+Vstupne data:
+  IV: 00000000000000000000000000000000
+  AAD: (prazdne)
+  Plaintext: 00000000000000000000000000000000
+  Ocakavany ciphertext: cea7403d4d606b6e074ec5d3baf39d18
+  Ocakavany tag: d0d1c8a799996bf0265b98b5d48ab919
+
+Test sifrovania:
+  Vypocitany ciphertext: cea7403d4d606b6e074ec5d3baf39d18
+  Vypocitany tag: d0d1c8a799996bf0265b98b5d48ab919
+  Vysledok: USPESNY
+
+Test desifrovania:
+  Vypocitany plaintext: 00000000000000000000000000000000
+  Autentifikacia: USPESNA
+  Vysledok: USPESNY
+```
+
+## Technická dokumentácia
+
+### Implementované režimy
+
+#### ECB (Electronic Codebook)
+- Základný režim bez inicializačného vektora
+- Priame šifrovanie blokov dát
+- Použitie: `AES_ECB_encrypt` / `AES_ECB_decrypt`
+
+#### CBC (Cipher Block Chaining)
+- Každý blok používa predchádzajúci zašifrovaný blok
+- Potrebný inicializačný vektor (IV)
+- Použitie: `AES_CBC_encrypt` / `AES_CBC_decrypt`
+
+#### CTR (Counter)
+- Šifrovanie počítadla generuje keystream
+- Paralelizovateľný režim
+- Použitie: `AES_CTR_crypt`
+
+#### CFB (Cipher Feedback)
+- Podporované veľkosti segmentov: 1-bit, 8-bit, 128-bit
+- Transformuje blokové šifry na prúdové
+- Použitie: `process_cfb`
+
+#### OFB (Output Feedback)
+- Generovanie keystreamu nezávislého od plaintextu
+- Odolný voči chybám pri prenose
+- Použitie: `generate_keystream`
+
+#### XTS (XEX-based tweaked-codebook mode with ciphertext stealing)
+- Špeciálne navrhnutý pre šifrovanie diskov
+- Používa dva kľúče a blokové úpravy
+- Použitie: `AES_XTS_encrypt` / `AES_XTS_decrypt`
+
+#### GCM (Galois/Counter Mode)
+- Autentifikované šifrovanie s dodatočnými dátami
+- Generuje autentifikačný tag
+- Použitie: `AES_GCM_encrypt` / `AES_GCM_decrypt`
+
+#### CCM (Counter with CBC-MAC)
+- Kombinuje CTR a CBC-MAC
+- Autentifikované šifrovanie
+- Použitie: `AES_CCM_encrypt` / `AES_CCM_decrypt`
+
+#### GCM-SIV (Synthetic Initialization Vector)
+- Nonce-misuse resistant autentifikované šifrovanie
+- Použitie: `GCM_SIV_encrypt` / `GCM_SIV_decrypt`
+
+#### SIV (Synthetic Initialization Vector)
+- Autentifikované šifrovanie odolné voči opakovanému použitiu nonce
+- Použitie: `AES_SIV_encrypt` / `AES_SIV_decrypt`
+
+#### OCB (Offset Codebook Mode)
+- Efektívne autentifikované šifrovanie
+- Paralelizovateľné spracovanie
+- Použitie: `AES_OCB_encrypt` / `AES_OCB_decrypt`
+
+#### EAX (Encrypt-then-Authenticate-then-Translate)
+- Dvojpriechodové autentifikované šifrovanie
+- Použitie: `AES_EAX_encrypt` / `AES_EAX_decrypt`
+
+#### KW (Key Wrap)
+- Určené pre prenos kľúčov
+- Používa RFC 3394 algoritmus
+- Použitie: `AES_KEY_wrap` / `AES_KEY_unwrap`
+
+#### FPE (Format-Preserving Encryption)
+- FF1 a FF3-1 algoritmy
+- Zachováva formát plaintextu (napr. čísla zostanú číslami)
+- Použitie: `FF1_encrypt` / `FF3_encrypt`
+
+## Bezpečnostné informácie
+
+### Režimy a ich použitie
+
+Jednotlivé režimy sú vhodné pre rôzne aplikácie:
+
+| Režim | Autentifikácia | Paralelizovateľný | Vhodné použitie |
+|-------|----------------|-------------------|-----------------|
+| ECB   | Nie            | Áno               | **NEODPORÚČA SA** pre priame použitie |
+| CBC   | Nie            | Nie               | Šifrovanie dát, ktoré sa nezmenia |
+| CTR   | Nie            | Áno               | Šifrovanie prúdov dát, video |
+| XTS   | Nie            | Áno               | Šifrovanie diskov |
+| GCM   | Áno            | Áno               | TLS, IPsec, všeobecné účely |
+| CCM   | Áno            | Nie               | Bezdrôtové siete (802.11) |
+| SIV   | Áno            | Čiastočne         | Dáta pri riziku opakovaného nonce |
+| OCB   | Áno            | Áno               | Vysokovýkonné šifrovanie |
+| EAX   | Áno            | Nie               | Obmedzené zariadenia |
+| KW    | Áno            | Nie               | Prenos kľúčov |
+| FPE   | Nie            | Nie               | Šifrovanie so zachovaním formátu |
+
+### Bezpečnostné odporúčania
+
+- **ECB**: Nepoužívajte pre skutočné aplikácie
+- **CBC**: Potrebuje nepredvídateľný IV pre každú správu
+- **CTR**: Potrebuje unikátne počítadlo pre každú správu
+- **GCM/CCM**: Nonce musí byť unikátny pre každý kľúč
+- **SIV/GCM-SIV**: Bezpečné aj pri opakovaní nonce, ale ideálne použiť unikátny
+- **XTS**: Odporúča sa 256-bitový kľúč (rozdiel od štandardu AES)
+
+## Podporované režimy
+
+Nasledujúca tabuľka zhŕňa podporované režimy AES spolu s relevantnými štandardmi a publikáciami:
+
+| Režim    | 128-bit | 192-bit | 256-bit | Autentifikácia | Štandard/Publikácia |
+|----------|:-------:|:-------:|:-------:|:--------------:|----------------------|
+| ECB      | ✓       | ✓       | ✓       | ✗              | FIPS 197 (2001)<br>[doi:10.6028/NIST.FIPS.197](https://doi.org/10.6028/NIST.FIPS.197) |
+| CBC      | ✓       | ✓       | ✓       | ✗              | NIST SP 800-38A (2001)<br>[doi:10.6028/NIST.SP.800-38A](https://doi.org/10.6028/NIST.SP.800-38A) |
+| CTR      | ✓       | ✓       | ✓       | ✗              | NIST SP 800-38A (2001)<br>[doi:10.6028/NIST.SP.800-38A](https://doi.org/10.6028/NIST.SP.800-38A) |
+| CFB      | ✓       | ✓       | ✓       | ✗              | NIST SP 800-38A (2001)<br>[doi:10.6028/NIST.SP.800-38A](https://doi.org/10.6028/NIST.SP.800-38A) |
+| OFB      | ✓       | ✓       | ✓       | ✗              | NIST SP 800-38A (2001)<br>[doi:10.6028/NIST.SP.800-38A](https://doi.org/10.6028/NIST.SP.800-38A) |
+| XTS      | ✓       | ✗       | ✓       | ✗              | IEEE Std 1619-2007<br>[doi:10.1109/IEEESTD.2008.4493450](https://doi.org/10.1109/IEEESTD.2008.4493450)<br>NIST SP 800-38E (2010)<br>[doi:10.6028/NIST.SP.800-38E](https://doi.org/10.6028/NIST.SP.800-38E) |
+| GCM      | ✓       | ✓       | ✓       | ✓              | NIST SP 800-38D (2007)<br>[doi:10.6028/NIST.SP.800-38D](https://doi.org/10.6028/NIST.SP.800-38D) |
+| CCM      | ✓       | ✓       | ✓       | ✓              | NIST SP 800-38C (2004)<br>[doi:10.6028/NIST.SP.800-38C](https://doi.org/10.6028/NIST.SP.800-38C)<br>RFC 3610 (2003) |
+| GCM-SIV  | ✓       | ✗       | ✓       | ✓              | RFC 8452 (2019)<br>"AES-GCM-SIV: Nonce Misuse-Resistant Authenticated Encryption"<br>[doi:10.17487/RFC8452](https://doi.org/10.17487/RFC8452) |
+| SIV      | ✓       | ✗       | ✓       | ✓              | RFC 5297 (2008)<br>"Synthetic Initialization Vector (SIV) Authenticated Encryption"<br>[doi:10.17487/RFC5297](https://doi.org/10.17487/RFC5297) |
+| OCB      | ✓       | ✓       | ✓       | ✓              | RFC 7253 (2014)<br>"The OCB Authenticated-Encryption Algorithm"<br>[doi:10.17487/RFC7253](https://doi.org/10.17487/RFC7253) |
+| EAX      | ✓       | ✓       | ✓       | ✓              | Bellare, M., Rogaway, P., Wagner, D. (2004)<br>"The EAX Mode of Operation"<br>[doi:10.1007/978-3-540-25937-4_27](https://doi.org/10.1007/978-3-540-25937-4_27) |
+| KW       | ✓       | ✓       | ✓       | ✓              | NIST SP 800-38F (2012)<br>[doi:10.6028/NIST.SP.800-38F](https://doi.org/10.6028/NIST.SP.800-38F)<br>RFC 3394 (2002) |
+| FPE-FF1  | ✓       | ✓       | ✓       | ✗              | NIST SP 800-38G (2016)<br>[doi:10.6028/NIST.SP.800-38G](https://doi.org/10.6028/NIST.SP.800-38G) |
+| FPE-FF3-1| ✓       | ✓       | ✓       | ✗              | NIST SP 800-38G Rev. 1 (2019)<br>[doi:10.6028/NIST.SP.800-38G-rev1-draft](https://csrc.nist.gov/publications/detail/sp/800-38g/rev-1/draft) |
+
+### Bezpečnostné odporúčania
+
+## Podporované režimy a testovacie vektory
+
+Nasledujúca tabuľka zhŕňa podporované režimy AES spolu s relevantnými štandardmi, publikáciami a testovacími vektormi dostupnými v projekte:
+
+| Režim    | 128-bit | 192-bit | 256-bit | Autentifikácia | Štandard/Publikácia | Testovacie vektory |
+|----------|:-------:|:-------:|:-------:|:--------------:|----------------------|-------------------|
+| ECB      | ✓       | ✓       | ✓       | ✗              | NIST SP 800-38A (2001)<br>[doi:10.6028/NIST.SP.800-38A](https://doi.org/10.6028/NIST.SP.800-38A) | `/test_vectors/ecb_128.txt`<br>`/test_vectors/ecb_192.txt`<br>`/test_vectors/ecb_256.txt` |
+| CBC      | ✓       | ✓       | ✓       | ✗              | NIST SP 800-38A (2001)<br>[doi:10.6028/NIST.SP.800-38A](https://doi.org/10.6028/NIST.SP.800-38A) | `/test_vectors/cbc_128.txt`<br>`/test_vectors/cbc_192.txt`<br>`/test_vectors/cbc_256.txt` |
+| CTR      | ✓       | ✓       | ✓       | ✗              | NIST SP 800-38A (2001)<br>[doi:10.6028/NIST.SP.800-38A](https://doi.org/10.6028/NIST.SP.800-38A) | `/test_vectors/ctr_128.txt`<br>`/test_vectors/ctr_192.txt`<br>`/test_vectors/ctr_256.txt` |
+| CFB      | ✓       | ✓       | ✓       | ✗              | NIST SP 800-38A (2001)<br>[doi:10.6028/NIST.SP.800-38A](https://doi.org/10.6028/NIST.SP.800-38A) | `/test_vectors/cfb_128.txt`<br>`/test_vectors/cfb8_128.txt`<br>`/test_vectors/cfb1_128.txt` |
+| OFB      | ✓       | ✓       | ✓       | ✗              | NIST SP 800-38A (2001)<br>[doi:10.6028/NIST.SP.800-38A](https://doi.org/10.6028/NIST.SP.800-38A) | `/test_vectors/ofb_128.txt`<br>`/test_vectors/ofb_192.txt`<br>`/test_vectors/ofb_256.txt` |
+| XTS      | ✓       | ✗       | ✓       | ✗              | IEEE Std 1619-2007<br>[doi:10.1109/IEEESTD.2008.4493450](https://doi.org/10.1109/IEEESTD.2008.4493450)<br>NIST SP 800-38E (2010)<br>[doi:10.6028/NIST.SP.800-38E](https://doi.org/10.6028/NIST.SP.800-38E) | `/test_vectors/xts_128.txt`<br>`/test_vectors/xts_256.txt` |
+| GCM      | ✓       | ✓       | ✓       | ✓              | NIST SP 800-38D (2007)<br>[doi:10.6028/NIST.SP.800-38D](https://doi.org/10.6028/NIST.SP.800-38D) | `/test_vectors/gcm_128.txt`<br>`/test_vectors/gcm_192.txt`<br>`/test_vectors/gcm_256.txt`<br>`/test_vectors/gcm1024_128.txt` |
+| CCM      | ✓       | ✓       | ✓       | ✓              | NIST SP 800-38C (2004)<br>[doi:10.6028/NIST.SP.800-38C](https://doi.org/10.6028/NIST.SP.800-38C)<br>RFC 3610 (2003) | `/test_vectors/ccm_128.txt`<br>`/test_vectors/ccm_192.txt`<br>`/test_vectors/ccm_256.txt` |
+| GCM-SIV  | ✓       | ✗       | ✓       | ✓              | RFC 8452 (2019)<br>"AES-GCM-SIV: Nonce Misuse-Resistant Authenticated Encryption"<br>[doi:10.17487/RFC8452](https://doi.org/10.17487/RFC8452) | `/test_vectors/gcm_siv_128.txt`<br>`/test_vectors/gcm_siv_256.txt` |
+| SIV      | ✓       | ✗       | ✓       | ✓              | RFC 5297 (2008)<br>"Synthetic Initialization Vector (SIV) Authenticated Encryption"<br>[doi:10.17487/RFC5297](https://doi.org/10.17487/RFC5297) | `/test_vectors/siv_128.txt`<br>`/test_vectors/siv_256.txt` |
+| OCB      | ✓       | ✓       | ✓       | ✓              | RFC 7253 (2014)<br>"The OCB Authenticated-Encryption Algorithm"<br>[doi:10.17487/RFC7253](https://doi.org/10.17487/RFC7253) | `/test_vectors/ocb_128.txt`<br>`/test_vectors/ocb_192.txt`<br>`/test_vectors/ocb_256.txt` |
+| EAX      | ✓       | ✓       | ✓       | ✓              | Bellare, M., Rogaway, P., Wagner, D. (2004)<br>"The EAX Mode of Operation"<br>[doi:10.1007/978-3-540-25937-4_27](https://doi.org/10.1007/978-3-540-25937-4_27) | `/test_vectors/eax_128.txt`<br>`/test_vectors/eax_192.txt`<br>`/test_vectors/eax_256.txt` |
+| KW       | ✓       | ✓       | ✓       | ✓              | NIST SP 800-38F (2012)<br>[doi:10.6028/NIST.SP.800-38F](https://doi.org/10.6028/NIST.SP.800-38F)<br>RFC 3394 (2002) | `/test_vectors/kw_ae_128.txt`<br>`/test_vectors/kw_ad_128.txt`<br>`/test_vectors/kw_ae_256.txt` |
+| FPE-FF1  | ✓       | ✓       | ✓       | ✗              | NIST SP 800-38G (2016)<br>[doi:10.6028/NIST.SP.800-38G](https://doi.org/10.6028/NIST.SP.800-38G) | `/test_vectors/ff1_128.txt`<br>`/test_vectors/ff1_192.txt`<br>`/test_vectors/ff1_256.txt` |
+| FPE-FF3-1| ✓       | ✓       | ✓       | ✗              | NIST SP 800-38G Rev. 1 (2019)<br>[doi:10.6028/NIST.SP.800-38G-rev1-draft](https://csrc.nist.gov/publications/detail/sp/800-38g/rev-1/draft) | `/test_vectors/ff3_128.txt`<br>`/test_vectors/ff3_192.txt`<br>`/test_vectors/ff3_256.txt` |
