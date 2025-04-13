@@ -1,5 +1,5 @@
 /************************************************************************
- * Nazov projektu: Demonštracia funkcnosti rezimov AES-u z kniznice micro-AES
+ * Nazov projektu: Demonstracia funkcnosti rezimov AES-u z kniznice micro-AES
  * -----------------------------------------------------------------------
  * Subor: cbc_demo.c
  * Verzia: 1.1
