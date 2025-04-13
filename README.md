@@ -20,7 +20,6 @@ Tento projekt obsahuje demonštračné implementácie rôznych režimov šifrova
 - Podporuje širokú škálu AES režimov (ECB, CBC, CTR, XTS, GCM, SIV a ďalšie)
 - Podpora kľúčových veľkostí: 128, 192, a 256 bitov
 - Kompatibilita s oficiálnymi NIST a inými testovacími vektormi
-- Modulárna štruktúra umožňujúca jednoduché pridávanie ďalších režimov
 - Čistá implementácia v C
 
 ### Spracovanie testovacích vektorov
