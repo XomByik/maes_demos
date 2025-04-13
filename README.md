@@ -1,4 +1,4 @@
-# Demonštrácia funkčnosti režimov AES-u z knižnice micro-aes pomocou oficiálnych testovacích vektorov
+# Demonštrácia funkčnosti režimov AES-u z knižnice micro-AES pomocou oficiálnych testovacích vektorov
 
 ## Obsah
 1. [Základný prehľad](#základný-prehľad)
@@ -152,77 +152,6 @@ Test desifrovania:
   Autentifikacia: USPESNA
   Vysledok: USPESNY
 ```
-
-## Technická dokumentácia
-
-### Implementované režimy
-
-#### ECB (Electronic Codebook)
-- Základný režim bez inicializačného vektora
-- Priame šifrovanie blokov dát
-- Použitie: `AES_ECB_encrypt` / `AES_ECB_decrypt`
-
-#### CBC (Cipher Block Chaining)
-- Každý blok používa predchádzajúci zašifrovaný blok
-- Potrebný inicializačný vektor (IV)
-- Použitie: `AES_CBC_encrypt` / `AES_CBC_decrypt`
-
-#### CTR (Counter)
-- Šifrovanie počítadla generuje keystream
-- Paralelizovateľný režim
-- Použitie: `AES_CTR_crypt`
-
-#### CFB (Cipher Feedback)
-- Podporované veľkosti segmentov: 1-bit, 8-bit, 128-bit
-- Transformuje blokové šifry na prúdové
-- Použitie: `process_cfb`
-
-#### OFB (Output Feedback)
-- Generovanie keystreamu nezávislého od plaintextu
-- Odolný voči chybám pri prenose
-- Použitie: `generate_keystream`
-
-#### XTS (XEX-based tweaked-codebook mode with ciphertext stealing)
-- Špeciálne navrhnutý pre šifrovanie diskov
-- Používa dva kľúče a blokové úpravy
-- Použitie: `AES_XTS_encrypt` / `AES_XTS_decrypt`
-
-#### GCM (Galois/Counter Mode)
-- Autentifikované šifrovanie s dodatočnými dátami
-- Generuje autentifikačný tag
-- Použitie: `AES_GCM_encrypt` / `AES_GCM_decrypt`
-
-#### CCM (Counter with CBC-MAC)
-- Kombinuje CTR a CBC-MAC
-- Autentifikované šifrovanie
-- Použitie: `AES_CCM_encrypt` / `AES_CCM_decrypt`
-
-#### GCM-SIV (Synthetic Initialization Vector)
-- Nonce-misuse resistant autentifikované šifrovanie
-- Použitie: `GCM_SIV_encrypt` / `GCM_SIV_decrypt`
-
-#### SIV (Synthetic Initialization Vector)
-- Autentifikované šifrovanie odolné voči opakovanému použitiu nonce
-- Použitie: `AES_SIV_encrypt` / `AES_SIV_decrypt`
-
-#### OCB (Offset Codebook Mode)
-- Efektívne autentifikované šifrovanie
-- Paralelizovateľné spracovanie
-- Použitie: `AES_OCB_encrypt` / `AES_OCB_decrypt`
-
-#### EAX (Encrypt-then-Authenticate-then-Translate)
-- Dvojpriechodové autentifikované šifrovanie
-- Použitie: `AES_EAX_encrypt` / `AES_EAX_decrypt`
-
-#### KW (Key Wrap)
-- Určené pre prenos kľúčov
-- Používa RFC 3394 algoritmus
-- Použitie: `AES_KEY_wrap` / `AES_KEY_unwrap`
-
-#### FPE (Format-Preserving Encryption)
-- FF1 a FF3-1 algoritmy
-- Zachováva formát plaintextu (napr. čísla zostanú číslami)
-- Použitie: `FF1_encrypt` / `FF3_encrypt`
 
 ## Podporované režimy a testovacie vektory
 
