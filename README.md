@@ -72,8 +72,8 @@ maes_demos/
 │   ├── micro_fpe.h       # Implementácia FPE režimu
 │   └── ...
 ├── header_files/         # Hlavičkové súbory pre každý režim 
-│   ├── cbc_config.h
-│   ├── gcm_config.h
+│   ├── cbc.h
+│   ├── gcm.h
 │   └── ...
 ├── src/                  # Demonštračné programy pre každý režim
 │   ├── cbc_demo.c
