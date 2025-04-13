@@ -1,8 +1,29 @@
 # Compiler and flags
-CC = gcc
+CC = gcc -std=gnu23
 CFLAGS = -Wall -Wextra -O2
 LIBS = -lm
-RM = rm -f
+# Cross-platform command for removing files
+ifeq ($(OS),Windows_NT)
+    # Windows-specific commands
+    RM = del /Q /F
+    RMDIR = rmdir /Q /S
+    CFLAGS += -D__USE_MINGW_ANSI_STDIO=1
+    # Handle Windows path separator for source files
+    fixpath = $(subst /,\,$1)
+    # Create executable with .exe extension on Windows
+    EXE_EXT = .exe
+else
+    # Unix/Linux commands
+    RM = rm -f
+    RMDIR = rm -rf
+    fixpath = $1
+    EXE_EXT = 
+endif
+
+# Add this in your Makefile for the Windows build
+ifdef MINGW
+  CFLAGS += -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0
+endif
 
 # --- Source Files ---
 # AES library
@@ -11,14 +32,14 @@ AES_LIB_HDR = libs/micro_aes.h
 # FPE library header (dependency for FPE demos)
 FPE_LIB_HDR = libs/micro_fpe.h
 # Common utilities
-COMMON_SRC = common.c
+COMMON_SRC = src/common.c
 COMMON_HDR = header_files/common.h
 COMMON_OBJ = $(COMMON_SRC:.c=.o)
 # Demo source files (base names)
 # List all base names for demos that exist
 # Note: gcm1024 is not a base, it's a variant built from gcm_demo.c
 DEMO_BASES = ecb cbc cfb ofb ctr xts gcm ccm kw eax ocb siv gcm_siv fpe
-DEMO_SRCS = $(patsubst %,%_demo.c,$(DEMO_BASES))
+DEMO_SRCS = $(patsubst %,src/%_demo.c,$(DEMO_BASES))
 DEMO_SRCS := $(filter-out $(COMMON_SRC), $(DEMO_SRCS))
 
 # --- Executable Definitions ---
@@ -28,24 +49,25 @@ XTS_SIZES = 128 256
 GCM_SIV_SIZES = 128 256
 OCB_SIZES = 128
 EAX_SIZES = 128
+SIV_SIZES = 128
 
 # Generate all possible executable names based on modes and sizes
 # Standard modes (ECB, CBC, CFB, OFB, CTR, GCM, CCM, KW, EAX) using AES_SIZES
-STD_MODES = ecb cbc cfb ofb ctr gcm ccm kw siv
-ALL_EXES = $(foreach size,$(AES_SIZES),$(patsubst %,%_demo_$(size),$(STD_MODES)))
+STD_MODES = ecb cbc cfb ofb ctr gcm ccm kw
+ALL_EXES = $(foreach size,$(AES_SIZES),$(patsubst %,%_demo_$(size)$(EXE_EXT),$(STD_MODES)))
 # XTS mode
-ALL_EXES += $(foreach size,$(XTS_SIZES),xts_demo_$(size))
+ALL_EXES += $(foreach size,$(XTS_SIZES),xts_demo_$(size)$(EXE_EXT))
 # OCB mode
-ALL_EXES += $(foreach size,$(OCB_SIZES),ocb_demo_$(size))
+ALL_EXES += $(foreach size,$(OCB_SIZES),ocb_demo_$(size)$(EXE_EXT))
 # GCM-SIV mode
-ALL_EXES += $(foreach size,$(GCM_SIV_SIZES),gcm_siv_demo_$(size))
+ALL_EXES += $(foreach size,$(GCM_SIV_SIZES),gcm_siv_demo_$(size)$(EXE_EXT))
 # GCM 1024 Nonce mode (uses gcm_demo.c) - Define specific targets
-ALL_EXES += $(foreach size,$(AES_SIZES),gcm_demo_$(size)_nonce1024)
+ALL_EXES += $(foreach size,$(AES_SIZES),gcm_demo_$(size)_nonce1024$(EXE_EXT))
 # FPE modes (use fpe_demo.c)
-ALL_EXES += $(foreach size,$(AES_SIZES),fpe_demo_ff1_$(size))
-ALL_EXES += $(foreach size,$(AES_SIZES),fpe_demo_ff3_$(size))
-ALL_EXES += $(foreach size,$(EAX_SIZES),eax_demo_$(size))
-
+ALL_EXES += $(foreach size,$(AES_SIZES),fpe_demo_ff1_$(size)$(EXE_EXT))
+ALL_EXES += $(foreach size,$(AES_SIZES),fpe_demo_ff3_$(size)$(EXE_EXT))
+ALL_EXES += $(foreach size,$(EAX_SIZES),eax_demo_$(size)$(EXE_EXT))
+ALL_EXES += $(foreach size,$(SIV_SIZES),siv_demo_$(size)$(EXE_EXT))
 
 # --- Targets ---
 
@@ -54,7 +76,7 @@ all: $(ALL_EXES)
 
 # Rule to compile common.c into common.o
 $(COMMON_OBJ): $(COMMON_SRC) $(COMMON_HDR) $(AES_LIB_HDR)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $(call fixpath,$<) -o $(call fixpath,$@)
 
 # --- Generic Compilation Rules ---
 # Common dependencies for all demo rules that don't need FPE
@@ -73,32 +95,28 @@ endef
 
 # Specific rules for GCM 1024 Nonce demo - Handles all AES sizes
 # Stem * is the size (e.g., 128)
-gcm_demo_%_nonce1024: gcm_demo.c $(COMMON_DEPS)
-	$(CC) $(CFLAGS) -o $@ $< $(COMMON_OBJ) $(AES_LIB_SRC) $(LIBS) -DAES___=$* $(call GET_FLAGS,$<,$@)
+gcm_demo_%_nonce1024$(EXE_EXT): src/gcm_demo.c $(COMMON_DEPS)
+	$(CC) $(CFLAGS) -o $(call fixpath,$@) $(call fixpath,$<) $(call fixpath,$(COMMON_OBJ)) $(call fixpath,$(AES_LIB_SRC)) $(LIBS) -DAES___=$* $(call GET_FLAGS,$(notdir $<),$@)
 
 # Rules for standard sizes (128, 192, 256) applied to remaining modes
 # The stem % will match the mode name (e.g., ecb, cbc, gcm, etc.)
-# These rules cover all targets like ecb_demo_128, gcm_demo_192, etc.
-# Excludes FPE and GCM Nonce1024 which are handled by the more specific rules above.
-%_demo_128: %_demo.c $(COMMON_DEPS)
-	$(CC) $(CFLAGS) -o $@ $< $(COMMON_OBJ) $(AES_LIB_SRC) $(LIBS) -DAES___=128 $(call GET_FLAGS,$<,$@)
+%_demo_128$(EXE_EXT): src/%_demo.c $(COMMON_DEPS)
+	$(CC) $(CFLAGS) -o $(call fixpath,$@) $(call fixpath,$<) $(call fixpath,$(COMMON_OBJ)) $(call fixpath,$(AES_LIB_SRC)) $(LIBS) -DAES___=128 $(call GET_FLAGS,$(notdir $<),$@)
 
-%_demo_192: %_demo.c $(COMMON_DEPS)
-	$(CC) $(CFLAGS) -o $@ $< $(COMMON_OBJ) $(AES_LIB_SRC) $(LIBS) -DAES___=192 $(call GET_FLAGS,$<,$@)
+%_demo_192$(EXE_EXT): src/%_demo.c $(COMMON_DEPS)
+	$(CC) $(CFLAGS) -o $(call fixpath,$@) $(call fixpath,$<) $(call fixpath,$(COMMON_OBJ)) $(call fixpath,$(AES_LIB_SRC)) $(LIBS) -DAES___=192 $(call GET_FLAGS,$(notdir $<),$@)
 
-%_demo_256: %_demo.c $(COMMON_DEPS)
-	$(CC) $(CFLAGS) -o $@ $< $(COMMON_OBJ) $(AES_LIB_SRC) $(LIBS) -DAES___=256 $(call GET_FLAGS,$<,$@)
+%_demo_256$(EXE_EXT): src/%_demo.c $(COMMON_DEPS)
+	$(CC) $(CFLAGS) -o $(call fixpath,$@) $(call fixpath,$<) $(call fixpath,$(COMMON_OBJ)) $(call fixpath,$(AES_LIB_SRC)) $(LIBS) -DAES___=256 $(call GET_FLAGS,$(notdir $<),$@)
 
 # Specific rules for FPE (FF1/FF3) demos - Handles all AES sizes
-# Dvoje špeciálne pravidlá pre FF1 a FF3 varianty
-
 # FF1 variant rule
-fpe_demo_ff1_%: fpe_demo.c $(FPE_DEPS)
-	$(CC) $(CFLAGS) -o $@ $< $(COMMON_OBJ) $(AES_LIB_SRC) $(LIBS) -DAES___=$* -DFF_X=1
+fpe_demo_ff1_%$(EXE_EXT): src/fpe_demo.c $(FPE_DEPS)
+	$(CC) $(CFLAGS) -o $(call fixpath,$@) $(call fixpath,$<) $(call fixpath,$(COMMON_OBJ)) $(call fixpath,$(AES_LIB_SRC)) $(LIBS) -DAES___=$* -DFF_X=1
 
 # FF3 variant rule
-fpe_demo_ff3_%: fpe_demo.c $(FPE_DEPS)
-	$(CC) $(CFLAGS) -o $@ $< $(COMMON_OBJ) $(AES_LIB_SRC) $(LIBS) -DAES___=$* -DFF_X=3
+fpe_demo_ff3_%$(EXE_EXT): src/fpe_demo.c $(FPE_DEPS)
+	$(CC) $(CFLAGS) -o $(call fixpath,$@) $(call fixpath,$<) $(call fixpath,$(COMMON_OBJ)) $(call fixpath,$(AES_LIB_SRC)) $(LIBS) -DAES___=$* -DFF_X=3
 
 # Pridáme cieľ pre kompiláciu všetkých FPE variant
 fpe: $(filter fpe_demo_%,$(ALL_EXES))
@@ -112,7 +130,11 @@ gcm: $(filter gcm_demo_%,$(ALL_EXES))
 
 # --- Clean Target ---
 clean:
+ifeq ($(OS),Windows_NT)
+	$(RM) $(subst /,\,$(ALL_EXES)) $(subst /,\,$(COMMON_OBJ)) *.o
+else
 	$(RM) $(ALL_EXES) $(COMMON_OBJ) *.o
+endif
 
 .PHONY: all clean cfb_demo gcm $(DEMO_BASES)
 

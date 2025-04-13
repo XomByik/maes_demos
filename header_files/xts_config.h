@@ -1,25 +1,19 @@
 #ifndef XTS_CONFIG_H
 #define XTS_CONFIG_H
 
-#include <stdint.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include "libs/micro_aes.h"
+#include "../libs/micro_aes.h"
 #include "common.h"
 
 #define XTS_LINE_BUFFER_SIZE 2048
 
 typedef struct {
-    int count;
-    char *hex_key1;
-    char *hex_key2;
-    char *hex_tweak;
-    char *hex_plaintext;
-    char *hex_ciphertext;
-    bool should_fail;
+  int count;
+  char *hex_key1;
+  char *hex_key2;
+  char *hex_tweak;
+  char *hex_plaintext;
+  char *hex_ciphertext;
+  bool should_fail;
 } TestCaseData;
 
 // Function prototypes

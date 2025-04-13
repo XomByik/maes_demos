@@ -94,7 +94,7 @@ Refer to the BOTTOM OF THIS DOCUMENT for some explanations about these macros:
 #endif // FPE
 
 #if CTR_NA
-#define CTR_IV_LENGTH  12  /* for using the last 32 bits as counter           */
+#define CTR_IV_LENGTH  16  /* for using the last 32 bits as counter           */
 #define CTR_STARTVALUE  1  /* recommended value according to the RFC-3686.    */
 #endif
 
