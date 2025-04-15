@@ -5,8 +5,8 @@ LIBS = -lm
 # Multiplatformovy prikaz na odstranenie suborov
 ifeq ($(OS),Windows_NT)
     # Prikazy specificke pre Windows
-    RM = del /Q /F
-    RMDIR = rmdir /Q /S
+    RM = rm -f
+    RMDIR = rm -rf
     CFLAGS += -D__USE_MINGW_ANSI_STDIO=1
     # Spracovanie oddelovaca ciest vo Windows pre zdrojove subory
     fixpath = $(subst /,\,$1)
@@ -131,7 +131,7 @@ gcm: $(filter gcm_demo_%,$(ALL_EXES))
 # --- Ciel na vycistenie ---
 clean:
 ifeq ($(OS),Windows_NT)
-	$(RM) $(subst /,\,$(ALL_EXES)) $(subst /,\,$(COMMON_OBJ)) *.o
+	$(RM) $(ALL_EXES) $(COMMON_OBJ) *.o
 else
 	$(RM) $(ALL_EXES) $(COMMON_OBJ) *.o
 endif
