@@ -48,14 +48,14 @@ git clone https://github.com/yourusername/maes_demos.git
 cd maes_demos
 ```
 
-2. Kompilácia programu:
+2. Kompilácia programu pre všetky režimy:
 ```bash
 make
 ```
 
-3. Kompilácia konkrétneho režimu (napríklad AES-GCM s 256-bitovým kľúčom):
+1. Kompilácia konkrétneho režimu (napríklad AES-GCM):
 ```bash
-make gcm_256
+make gcm
 ```
 
 ## Ako to funguje
@@ -102,17 +102,17 @@ maes_demos/
 
 ### Kompilácia konkrétneho režimu
 
-Pomocou Makefile môžete vytvoriť špecifickú verziu programu pre konkrétny režim a veľkosť kľúča:
+Pomocou Makefile môžete vytvoriť špecifickú verziu programu pre konkrétny režim:
 
 ```bash
-# AES-ECB s 128-bitovým kľúčom
-make ecb_128
+# AES-ECB
+make ecb
 
-# AES-CBC s 256-bitovým kľúčom
-make cbc_256
+# AES-CBC 
+make cbc
 
-# AES-GCM s 192-bitovým kľúčom
-make gcm_192
+# AES-GCM 
+make gcm
 ```
 
 ### Spustenie testovania
