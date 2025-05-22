@@ -60,7 +60,7 @@ make gcm
 
 ## Ako to funguje
 
-### Architektúra projektu
+### Štruktúra projektu
 
 Projekt je organizovaný do nasledujúcej štruktúry:
 
