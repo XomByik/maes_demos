@@ -44,7 +44,7 @@ Tento projekt obsahuje demonštračné implementácie rôznych režimov šifrova
 
 1. Klonovanie repozitára:
 ```bash
-git clone https://github.com/yourusername/maes_demos.git
+git clone https://github.com/XomByik/maes_demos.git
 cd maes_demos
 ```
 
