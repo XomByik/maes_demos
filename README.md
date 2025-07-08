@@ -173,3 +173,6 @@ Nasledujúca tabuľka zhŕňa podporované režimy AES spolu s relevantnými št
 | KW       | ✓       | ✓       | ✓       | ✓              | NIST SP 800-38F (2012)<br>[Cryptographic Algorithm Validation Program](https://csrc.nist.gov/Projects/cryptographic-algorithm-validation-program/cavp-testing-block-cipher-modes#KW) | `/test_vectors/kw_ae_128.txt`<br>`/test_vectors/kw_ad_128.txt`<br>`/test_vectors/kw_ae_256.txt` |
 | FPE-FF1  | ✓       | ✓       | ✓       | ✗              | NIST SP 800-38G (2016)<br>[Block Cipher Modes of Operation - FF1 Method for Format-Preserving Encryption](https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Standards-and-Guidelines/documents/examples/FF1samples.pdf) | `/test_vectors/ff1_128.txt`<br>`/test_vectors/ff1_192.txt`<br>`/test_vectors/ff1_256.txt` |
 | FPE-FF3| ✓       | ✓       | ✓       | ✗              | NIST SP 800-38G (2016)<br>[Block Cipher Modes of Operation - FF3 Method for Format-Preserving Encryption](https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Standards-and-Guidelines/documents/examples/FF3samples.pdf   ) | `/test_vectors/ff3_128.txt`<br>`/test_vectors/ff3_192.txt`<br>`/test_vectors/ff3_256.txt` |
+
+### Použité knižnice
+- [micro-AES](https://github.com/polfosol/micro-AES)
